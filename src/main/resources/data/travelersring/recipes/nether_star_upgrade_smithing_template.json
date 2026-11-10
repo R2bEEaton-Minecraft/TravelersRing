@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "minecraft:netherite_upgrade_smithing_template" },
+    { "item": "minecraft:nether_star" }
+  ],
+  "result": { "item": "travelersring:nether_star_upgrade_smithing_template" }
+}

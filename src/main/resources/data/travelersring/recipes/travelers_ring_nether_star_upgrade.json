@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "travelersring:nether_star_upgrade_smithing_template" },
+  "base": { "item": "travelersring:travelers_ring_netherite" },
+  "addition": { "item": "minecraft:netherite_ingot" },
+  "result": { "item": "travelersring:travelers_ring_nether_star" }
+}
