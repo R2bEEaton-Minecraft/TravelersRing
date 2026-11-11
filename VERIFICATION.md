@@ -1,8 +1,8 @@
 # Verification results
 
 Run on 2026-11-10, Windows 11, JDK 17 (Temurin 17.0.16), Gradle 8.8, ForgeGradle 6, Forge 47.4.0, Curios 5.14.1+1.20.1.
-Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `588588676d8ea5846a301acb0ec0674322fbd1d0ad768f07112bb0fa23399334`
-(136,190 bytes; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
+Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `4a9d8195260cdb1759cb6357a3bf066e29670e0b534b317303d43c9213c56992`
+(135,221 bytes; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
 
 ## What was actually run and what happened
 
@@ -14,6 +14,8 @@ Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `588588676d8ea5846a301acb0e
 | 4 | **Real Forge 1.20.1-47.4.0 dedicated server** with Curios and the final distributable JAR (reobfuscated, from `dist/`, SHA verified identical) | **Booted cleanly**: `Done (9.5s)`, datapack `mod:travelersring` enabled, `Loaded 10 curio slots / 1 curio entities`, `reload` clean, `stop` exit code 0, no errors from the mod. Config file generated. |
 | 5 | Dev client to main menu (`runClient`) | Reached the sound-engine/main-menu stage with no mod errors (all models/textures/lang/keybind registration loaded). |
 | 6 | Dev client joined that real dedicated server (`-PquickPlay`) | **Forge handshake and login succeeded** (`Dev joined the game`); server console `xp add` and `/curios replace ring 0 Dev with travelersring:travelers_ring` worked; the client showed the resulting XP level. |
+| 7 | After the wording/texture/config-comment pass: `./gradlew clean build runGameTestServer`, then the new JAR (hash above) on the real server **with JEI 15.56.0.205 added** | Build OK, **40 / 40 GameTests passed**. Server: `Done (2.2s)`, datapacks `mod:forge, mod:curios, mod:travelersring, mod:jei`, 10 curio slots, no errors from the mod (the only ERROR was the console reader failing on my piped stdin, unrelated). |
+| 8 | Dev client (now with JEI in its runtime classpath) joined that server | Joined. JEI started (`Starting JEI took 652.9 ms`, `Registering recipes ... 284 ms`) with no JEI or `travelersring` warnings/errors in the client log. I did **not** open JEI's screen to look at the ring recipes (no working GUI input, see below). |
 
 ## GameTest coverage (40)
 
@@ -39,4 +41,5 @@ Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `588588676d8ea5846a301acb0e
 
 ## Environment notes
 * Test servers/clients ran from git-ignored `server-test/` and `run*/` directories.
+* Rows 1-6 ran on the first build. Row 7 re-ran the build and tests after the text, config-comment and texture changes; the shipped JAR is the row 7 build.
 * A Windows Firewall prompt for Java appeared when the test server started; it was cancelled (loopback needs no rule).

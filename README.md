@@ -1,13 +1,12 @@
 # Traveler's Ring
 
-A Minecraft **Forge 1.20.1** mod with **Curios** support, built for Applecar.
-Explorers wear a ring that teleports them to spawn for XP, remembers exactly where they left, and lets them
-return **for free**. Two smithing upgrades add the Nether, then any dimension, death-gear retention and a
-choose-your-respawn menu.
+A Forge 1.20.1 mod (needs Curios), built for Applecar.
+The ring teleports you to your spawn for some XP and remembers where you were, so you can come back for free.
+Two smithing upgrades add the Nether, then every dimension, keeping your gear when you die, and choosing where you respawn.
 
-> **Status:** feature-complete against `BRIEF.md`. Art is **placeholder** until the client supplies textures
-> (see [Placeholder art](#placeholder-art)). The working name "Traveler's Ring" is Ryan's proposal and is unconfirmed by the client.
-> Read [ASSUMPTIONS.md](ASSUMPTIONS.md) and [VERIFICATION.md](VERIFICATION.md) for decisions and for exactly what has/hasn't been tested.
+> **Status:** everything in `BRIEF.md` is built. The art is placeholder until the client sends textures, and "Traveler's Ring"
+> is a working name the client hasn't confirmed. [ASSUMPTIONS.md](ASSUMPTIONS.md) lists the decisions made along the way and
+> [VERIFICATION.md](VERIFICATION.md) says exactly what was and wasn't tested.
 
 ## Requirements
 

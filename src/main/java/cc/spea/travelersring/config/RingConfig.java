@@ -74,84 +74,72 @@ public final class RingConfig {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
 
         b.comment(
-                "XP cost of the 'teleport to spawn' action. XP is measured in experience POINTS (not levels).",
-                "Returning to the saved location, deleting it, and choosing a respawn point are ALWAYS free.",
-                "",
-                "PROVISIONAL DEFAULT: the client first confirmed a flat configurable cost, but their latest message says",
-                "'XP points ... try 10 per block to start'. That wording is unresolved, so the default is FLAT = 10 points.",
-                "Switch cost_mode to PER_BLOCK to try the per-block reading."
+                "What a teleport to spawn costs. Costs are in experience points, not levels.",
+                "Returning to the saved spot, forgetting it, and picking a respawn point are always free."
         ).push("xp");
-        COST_MODE = b.comment("FLAT = same cost every time (default). PER_BLOCK = cost scales with horizontal distance.")
+        COST_MODE = b.comment("FLAT: every teleport costs flat_cost. PER_BLOCK: cost grows with distance.")
                 .defineEnum("cost_mode", CostMode.FLAT);
-        FLAT_COST = b.comment("FLAT mode: XP points charged per teleport for the BASE ring. (10 points is only about 1 level at low levels.)")
+        FLAT_COST = b.comment("FLAT mode: XP points per teleport with the base ring.")
                 .defineInRange("flat_cost", 10, 0, 1_000_000);
         PER_BLOCK_COST = b.comment(
-                        "PER_BLOCK mode: XP points per block of horizontal distance. 10.0 is the client's literal wording and is VERY steep",
-                        "(1000 blocks = 10,000 points, roughly level 100). Lower it (e.g. 0.05) for a playable curve.",
-                        "Cross-dimension distance: both points are converted to Overworld-equivalent coordinates using each",
-                        "dimension's coordinate scale (Nether = x8), then the horizontal (X/Z) distance is measured. Y is ignored.")
+                        "PER_BLOCK mode: XP points per block of distance (X/Z only, height is ignored).",
+                        "10.0 is very expensive: 1000 blocks costs 10,000 points. Something like 0.05 is more playable.",
+                        "Between dimensions, both points are converted to Overworld coordinates first (Nether = x8).")
                 .defineInRange("per_block_cost", 10.0, 0.0, 1_000_000.0);
-        PER_BLOCK_MAX_COST = b.comment("PER_BLOCK mode: cap on the base cost before tier multipliers. 0 = no cap.")
+        PER_BLOCK_MAX_COST = b.comment("PER_BLOCK mode: most a teleport can cost before the ring multiplier. 0 = no limit.")
                 .defineInRange("per_block_max_cost", 0, 0, 1_000_000_000);
-        NETHERITE_MULTIPLIER = b.comment("Cost multiplier for the first upgrade (Netherite Traveler's Ring). The brief says XP costs are halved.")
+        NETHERITE_MULTIPLIER = b.comment("Cost multiplier for the Netherite ring.")
                 .defineInRange("netherite_multiplier", 0.5, 0.0, 100.0);
-        NETHER_STAR_MULTIPLIER = b.comment(
-                        "Cost multiplier for the second upgrade (Nether Star Traveler's Ring).",
-                        "PROVISIONAL: the client did not specify this. Default matches the first upgrade (halved).")
+        NETHER_STAR_MULTIPLIER = b.comment("Cost multiplier for the Nether Star ring.")
                 .defineInRange("nether_star_multiplier", 0.5, 0.0, 100.0);
-        CREATIVE_FREE = b.comment("Creative-mode players never pay XP.").define("creative_free", true);
+        CREATIVE_FREE = b.comment("Players in creative mode don't pay XP.").define("creative_free", true);
         b.pop();
 
-        b.comment("Where each ring tier may be used. Dimension ids look like 'minecraft:overworld'.").push("usage");
-        BASE_DIMENSIONS = b.comment("Dimensions the base ring works in (default: Overworld only).")
+        b.comment("Where each ring works. Dimensions are written like minecraft:overworld.").push("usage");
+        BASE_DIMENSIONS = b.comment("Dimensions the base ring works in.")
                 .defineListAllowEmpty("base_dimensions", List.of("minecraft:overworld"), RingConfig::isResourceLocation);
-        NETHERITE_DIMENSIONS = b.comment("Dimensions the Netherite ring (first upgrade) works in.")
+        NETHERITE_DIMENSIONS = b.comment("Dimensions the Netherite ring works in.")
                 .defineListAllowEmpty("netherite_dimensions", List.of("minecraft:overworld", "minecraft:the_nether"), RingConfig::isResourceLocation);
-        NETHER_STAR_ANY_DIMENSION = b.comment("Nether Star ring (second upgrade) works in every dimension, including modded ones.")
+        NETHER_STAR_ANY_DIMENSION = b.comment("The Nether Star ring works in every dimension, modded ones included.")
                 .define("nether_star_any_dimension", true);
-        NETHER_STAR_DIMENSIONS = b.comment("Only used when nether_star_any_dimension = false.")
+        NETHER_STAR_DIMENSIONS = b.comment("Dimensions the Nether Star ring works in. Only used if nether_star_any_dimension is false.")
                 .defineListAllowEmpty("nether_star_dimensions", List.of("minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"), RingConfig::isResourceLocation);
-        BLOCKED_DIMENSIONS = b.comment("Dimensions where NO ring tier works (e.g. minigame or dungeon dimensions). Overrides everything above.")
+        BLOCKED_DIMENSIONS = b.comment("Dimensions where no ring works. Overrides everything above.")
                 .defineListAllowEmpty("blocked_dimensions", List.of(), RingConfig::isResourceLocation);
         b.pop();
 
-        b.comment("Teleport safety. Return points are re-checked at use time and may have become unsafe.").push("safety");
-        SAFE_SEARCH_RADIUS = b.comment("If the exact saved return point is blocked or hazardous, search this many blocks horizontally for a safe spot. 0 = exact point only.")
+        b.comment("Return points are checked again when you use them, in case the spot became unsafe.").push("safety");
+        SAFE_SEARCH_RADIUS = b.comment("If the return point is blocked or dangerous, look this many blocks sideways for a safe spot. 0 = exact spot only.")
                 .defineInRange("search_radius", 3, 0, 16);
-        SAFE_SEARCH_VERTICAL = b.comment("...and this many blocks up/down.")
+        SAFE_SEARCH_VERTICAL = b.comment("How many blocks up and down to look.")
                 .defineInRange("search_vertical", 4, 0, 32);
         b.pop();
 
-        b.comment("Nether Star ring death/respawn features.").push("death");
+        b.comment("What the Nether Star ring does when you die.").push("death");
         RETAIN_HELD_AND_ARMOR = b.comment(
-                        "If a Nether Star ring is equipped in a Curios slot when the player dies, keep ONLY the held items",
-                        "(selected hotbar slot + offhand) and the 4 armor slots. Everything else follows normal rules.",
-                        "The ring itself and other Curios follow Curios' own drop rules/settings, not this option.")
+                        "Wearing the ring when you die keeps the item in your selected hotbar slot, your offhand and your armor.",
+                        "Everything else drops as usual.")
                 .define("retain_held_and_armor", true);
         RING_KEEPS_ITSELF = b.comment(
-                        "OFF (default, follows the project brief): Curios' own drop settings decide whether the equipped ring (and any other",
-                        "Curio) stays after death - by default Curios drops them unless keepInventory is on.",
-                        "ON: the Nether Star ring declares itself 'always keep' through Curios' own drop-rule API, which matches the client's",
-                        "original PDF wording ('retain ... the ring itself'). Other mods/datapacks that override Curios drop rules still win.",
-                        "Only the ring is affected; no other Curio is ever retained by this mod.")
+                        "false: Curios decides what happens to the ring on death (it normally drops).",
+                        "true: the ring is kept too. Other mods that change Curios drop rules still win.")
                 .define("ring_keeps_itself", false);
-        RESPAWN_CHOICE = b.comment("A player who dies with a Nether Star ring equipped may pick any valid recorded spawnpoint on the death screen (free).")
+        RESPAWN_CHOICE = b.comment("Wearing the ring when you die lets you pick any of your spawn points on the death screen, for free.")
                 .define("respawn_choice", true);
         b.pop();
 
         b.comment(
-                "Loot injection for the BASE ring.",
-                "IMPORTANT: these are chest LOOT TABLE ids (e.g. 'minecraft:chests/simple_dungeon'), NOT structure ids",
-                "(e.g. 'minecraft:desert_pyramid' is a structure; its chest uses the loot table 'minecraft:chests/desert_pyramid').",
-                "The ids are not interchangeable. Wildcards are allowed: '*' matches any characters, e.g. 'somemod:chests/*'.",
-                "No compatibility with arbitrary modded structures is promised; add their chest loot-table ids here to opt in."
+                "Where the base ring turns up in chests.",
+                "These are chest loot table ids like minecraft:chests/simple_dungeon, not structure ids.",
+                "(The desert pyramid structure uses the loot table minecraft:chests/desert_pyramid.)",
+                "You can use * as a wildcard, e.g. somemod:chests/*. Add a modded structure's chest table here to include it."
         ).push("loot");
-        LOOT_ENABLED = b.comment("Inject the ring into the loot tables below.").define("enabled", true);
-        LOOT_CHANCE = b.comment("Chance (0.0 - 1.0) that each opened target chest receives a ring. Default 5%.")
+        LOOT_ENABLED = b.comment("Add the ring to the loot tables below.").define("enabled", true);
+        LOOT_CHANCE = b.comment("Chance (0.0 to 1.0) that an opened chest in the list holds a ring.")
                 .defineInRange("chance", 0.05, 0.0, 1.0);
-        LOOT_TABLES = b.comment("Chest loot-table ids (wildcards allowed) that can roll the ring.")
+        LOOT_TABLES = b.comment("Loot tables that can contain the ring.")
                 .defineListAllowEmpty("target_loot_tables", DEFAULT_LOOT_TABLES, RingConfig::isLootPattern);
-        LOOT_DIMENSIONS = b.comment("Only inject when the chest is in one of these dimensions (default: Overworld only). Empty list = any dimension.")
+        LOOT_DIMENSIONS = b.comment("Only add the ring to chests in these dimensions. Empty = any dimension.")
                 .defineListAllowEmpty("dimensions", List.of("minecraft:overworld"), RingConfig::isResourceLocation);
         b.pop();
 

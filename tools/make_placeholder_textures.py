@@ -1,7 +1,7 @@
 """Generates the PLACEHOLDER textures for Traveler's Ring.
 
 These are intentionally rough stand-ins until the client (Applecar) supplies final art.
-Every texture carries a 2x2 magenta marker in the top-left corner so placeholders are obvious in-game.
+They are plain 16x16 sprites. Replace the PNGs with the real art when it arrives.
 
 Usage:  python -I tools/make_placeholder_textures.py
 Writes into src/main/resources/assets/travelersring/textures/item/
@@ -11,15 +11,6 @@ from PIL import Image
 
 OUT = Path(__file__).resolve().parent.parent / "src/main/resources/assets/travelersring/textures/item"
 OUT.mkdir(parents=True, exist_ok=True)
-
-MAGENTA = (255, 0, 255, 255)
-
-
-def marker(img):
-    for x in range(2):
-        for y in range(2):
-            img.putpixel((x, y), MAGENTA)
-
 
 def ring(band, shade, gem, gem_hi):
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
@@ -44,7 +35,6 @@ def ring(band, shade, gem, gem_hi):
         img.putpixel(p, gem)
     img.putpixel((7, 3), gem_hi)
     img.putpixel((7, 4), gem_hi)
-    marker(img)
     return img
 
 
@@ -74,7 +64,6 @@ star = (255, 250, 200, 255)
 for p in [(7, 4), (8, 4), (7, 5), (8, 5), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7),
           (6, 8), (7, 8), (8, 8), (9, 8), (6, 9), (7, 9), (8, 9), (9, 9), (5, 10), (6, 10), (9, 10), (10, 10)]:
     tpl.putpixel(p, star)
-marker(tpl)
 save("nether_star_upgrade_smithing_template.png", tpl)
 
 # empty smithing-table slot icon for the base (ring) slot: dark grey silhouette

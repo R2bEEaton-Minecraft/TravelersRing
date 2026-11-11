@@ -43,7 +43,13 @@ Dev client: `./gradlew runClient` (or `-PquickPlay=host:port` to join a server).
 8. Fill hotbar/armor/offhand/other items, `/kill`. On respawn only held slot, offhand, armor return; the rest is on the ground.
    Death screen shows **Respawn at: ...**; click to cycle, then Respawn.
 9. Try a second client to confirm both see their own rings' data.
-10. Check `/give` rings are in the creative tab "Traveler's Ring"; the placeholder textures show the magenta marker.
+10. Check `/give` rings are in the creative tab "Traveler's Ring"; the textures are placeholders.
 
-## 4. Regenerating assets
+## 4. Playtest setup (JEI + Curios)
+
+* **Dev client:** `./gradlew runClient` already has Curios and JEI 15.56.0.205 on its classpath (`jei_version` in `gradle.properties`; dev-only, not a dependency of the shipped mod). World saves live in `run/saves`.
+* **Local server:** `server-test/` is a Forge 1.20.1-47.4.0 server whose `mods/` has Curios 5.14.1, JEI 15.56.0.205 and the mod JAR. Start it with `server-test/run.bat` (add `--nogui` if you like), then join `localhost` from a client that has the same three mods, or from the dev client with `./gradlew runClient -PquickPlay=localhost:25565`.
+* After rebuilding, copy `build/libs/travelersring-1.0.0.jar` over the one in `server-test/mods/`.
+
+## 5. Regenerating assets
 `python -I tools/make_placeholder_textures.py` (placeholder PNGs), `python -I tools/make_empty_structure.py` (GameTest template).

@@ -70,6 +70,10 @@ repositories {
         name = 'Curios'
         url = 'https://maven.theillusivec4.top/'
     }
+    maven {
+        name = 'JEI'
+        url = 'https://maven.blamejared.com/'
+    }
 }
 
 dependencies {
@@ -78,6 +82,9 @@ dependencies {
     // Curios: compile against the API, and run the full Curios jar in dev runs.
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
+
+    // JEI: dev client/server only (recipe viewer for playtesting), never a dependency of the shipped jar.
+    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 
     gametestCompileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
 }
