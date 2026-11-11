@@ -31,7 +31,7 @@ public class RingScreen extends Screen {
     private static final int BAR_W = 182;
     private static final int BAR_H = 5;
     private static final int ROW_PLAIN = 24;
-    private static final int ROW_WITH_BAR = 32;
+    private static final int ROW_WITH_BAR = 40;
 
     private final MenuData data;
     /** XP bars to draw (the cost under each teleport button), filled in by init(). */
@@ -94,7 +94,7 @@ public class RingScreen extends Screen {
             }
             addRenderableWidget(b);
             if (barsOn && t.valid() && t.cost() > 0) {
-                bars.add(new Bar(this.width / 2 - BAR_W / 2, y + 23, t.cost(), affordable));
+                bars.add(new Bar(this.width / 2 - BAR_W / 2, y + 30, t.cost(), affordable));
             }
             y += barsOn ? ROW_WITH_BAR : ROW_PLAIN;
         }
@@ -133,8 +133,8 @@ public class RingScreen extends Screen {
     }
 
     /**
-     * Draws a vanilla-style experience bar holding {@code points} XP: the level number to its left and the bar filled
-     * to the progress into that level, exactly as the points would look in the player's own XP bar.
+     * Draws a vanilla-style experience bar holding {@code points} XP: the level number centred above it, as on the HUD,
+     * and the bar filled to the progress into that level, exactly as the points would look in the player's own XP bar.
      */
     private void drawXpBar(GuiGraphics g, int x, int y, int points, int numberColor) {
         int level = XpHelper.levelForPoints(points);
@@ -145,8 +145,8 @@ public class RingScreen extends Screen {
             g.blit(ICONS, x, y, 0, 69, filled, BAR_H);
         }
         String text = Integer.toString(level);
-        int tx = x - 4 - this.font.width(text);
-        int ty = y + BAR_H / 2 - 3;
+        int tx = x + (BAR_W - this.font.width(text)) / 2;
+        int ty = y - 6;
         // vanilla draws the level number with a black outline
         g.drawString(this.font, text, tx + 1, ty, 0, false);
         g.drawString(this.font, text, tx - 1, ty, 0, false);
