@@ -15,8 +15,8 @@ Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `8eb8c6863d17e0901248cd8cfb
 | 5 | Dev client to main menu (`runClient`) | Reached the sound-engine/main-menu stage with no mod errors (all models/textures/lang/keybind registration loaded). |
 | 6 | Dev client joined that real dedicated server (`-PquickPlay`) | **Forge handshake and login succeeded** (`Dev joined the game`); server console `xp add` and `/curios replace ring 0 Dev with travelersring:travelers_ring` worked; the client showed the resulting XP level. |
 | 7 | After the wording/texture/config-comment pass: `./gradlew clean build runGameTestServer`, then the new JAR (hash above) on the real server **with JEI 15.56.0.205 added** | Build OK, **40 / 40 GameTests passed**. Server: `Done (2.2s)`, datapacks `mod:forge, mod:curios, mod:travelersring, mod:jei`, 10 curio slots, no errors from the mod (the only ERROR was the console reader failing on my piped stdin, unrelated). |
-| 9 | Template texture redrawn, rebuilt: `clean build runGameTestServer` | Build OK, 40 / 40 passed. The server was not re-booted for this texture-only change. The new sprite was only compared visually as a PNG against the vanilla one, not in-game. |
 | 8 | Dev client (now with JEI in its runtime classpath) joined that server | Joined. JEI started (`Starting JEI took 652.9 ms`, `Registering recipes ... 284 ms`) with no JEI or `travelersring` warnings/errors in the client log. I did **not** open JEI's screen to look at the ring recipes (no working GUI input, see below). |
+| 9 | Template texture redrawn, rebuilt: `clean build runGameTestServer` | Build OK, 40 / 40 passed. The server was not re-booted for this texture-only change. The new sprite was only compared visually as a PNG against the vanilla one, not in-game. |
 
 ## GameTest coverage (40)
 
