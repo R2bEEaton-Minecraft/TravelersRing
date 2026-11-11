@@ -1,8 +1,8 @@
 # Verification results
 
 Run on 2026-11-10, Windows 11, JDK 17 (Temurin 17.0.16), Gradle 8.8, ForgeGradle 6, Forge 47.4.0, Curios 5.14.1+1.20.1.
-Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `bf31423a71e9e525ee21860c46198d911847c6abbb938323f7ab74edccd67387`
-(135,789 bytes; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
+Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `b2af1152c45d9df6079dcf158712d95cca1772c6bb627e1eb3cc2a2db4eebd04`
+(138,397 bytes; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
 
 ## What was actually run and what happened
 
@@ -32,9 +32,13 @@ Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `bf31423a71e9e525ee21860c46
 
 ## NOT verified (do not assume these work)
 
-* **In-game client UI was not exercised.** The ring screen, delete-confirm dialog, death-screen "Respawn at" button, keybind press, tooltips, and smithing-table UI were *compiled and loaded without errors* but never seen or clicked. I tried to drive the dev client with desktop automation; synthetic keyboard input did not reach the Minecraft window in this session (even Escape), so that attempt produced no UI evidence.
+* **Client UI is mostly unseen.** Ryan opened the ring screen in-game and sent a screenshot (the base ring, no return point, 0 XP), so
+  the open-menu path (client request, server menu data, screen) worked at least once, and the unaffordable-button tooltip showed. That
+  screenshot also showed the long label being clipped and prompted the XP bars; **the clipping fix and the XP bars (cost under each
+  teleport button, player's bar in the header) were added afterwards and have not been seen by me or confirmed by Ryan.**
+  Everything else on the screen, the delete-confirm dialog, death-screen "Respawn at" button, keybind press, tooltips, and smithing-table UI were *compiled and loaded without errors* but never seen or clicked. I tried to drive the dev client with desktop automation; synthetic keyboard input did not reach the Minecraft window in this session (even Escape), so that attempt produced no UI evidence.
 * The **client→server packet path from a real key press / button click** was not exercised end-to-end (handshake and login were). The server logic behind each packet is tested directly, and each packet's encode/decode is round-trip tested.
-* Placeholder textures/models were loaded without error but not visually inspected in-game.
+* Placeholder textures: Ryan has seen the item icons in-game and gave feedback (template shape, ring style, outline), all applied; I have only seen them as enlarged PNGs.
 * Loot injection was verified by rolling the loot tables, not by opening chests in generated structures.
 * Real multiplayer with several clients, other mods, other Forge/Curios versions, long-running servers, and performance: untested.
 * A real "disconnect on the death screen" was simulated by calling the login handler, not by disconnecting a real client.
