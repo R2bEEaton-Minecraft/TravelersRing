@@ -47,23 +47,56 @@ save("travelers_ring.png", ring((214, 170, 60, 255), (150, 108, 30, 255), (60, 1
 save("travelers_ring_netherite.png", ring((84, 70, 74, 255), (48, 40, 44, 255), (230, 140, 40, 255), (255, 220, 140, 255)))
 save("travelers_ring_nether_star.png", ring((72, 60, 90, 255), (40, 30, 60, 255), (250, 250, 210, 255), (255, 255, 255, 255)))
 
-# smithing template: a card with a star glyph
+# Smithing template: same silhouette and shading layout as the vanilla Netherite Upgrade template
+# (dark outline, light top-left edge, four-shade mottled body, icon in the middle), recoloured violet,
+# with a Nether Star glyph where vanilla has its icon.
+CARD = [
+    "................",
+    "....222222222...",
+    "...23444444342..",
+    "...2444343333o..",
+    "...o333312333o..",
+    "...o332131332o..",
+    "...o321333121o..",
+    "...o213333312o..",
+    "...o344333443o..",
+    "...o434333433o..",
+    "...o333333342o..",
+    "...o233444331o..",
+    "...o123322221o..",
+    "....o11221ooo...",
+    ".....ooooo......",
+    "................",
+]
+STAR = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "........s.......",
+    "........s.......",
+    ".......sSs......",
+    ".....ddsSssd....",
+    ".......sss......",
+    "........d.......",
+    "........d.......",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+]
+PAL = {
+    "o": (27, 16, 48, 255), "1": (47, 31, 88, 255), "2": (62, 42, 110, 255),
+    "3": (78, 55, 138, 255), "4": (97, 72, 166, 255),
+    "S": (255, 251, 208, 255), "s": (240, 208, 96, 255), "d": (192, 144, 42, 255),
+}
 tpl = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-card = (96, 70, 140, 255)
-edge = (50, 34, 80, 255)
-for x in range(3, 13):
-    for y in range(1, 15):
-        tpl.putpixel((x, y), card)
-for x in range(3, 13):
-    tpl.putpixel((x, 1), edge)
-    tpl.putpixel((x, 14), edge)
-for y in range(1, 15):
-    tpl.putpixel((3, y), edge)
-    tpl.putpixel((12, y), edge)
-star = (255, 250, 200, 255)
-for p in [(7, 4), (8, 4), (7, 5), (8, 5), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7),
-          (6, 8), (7, 8), (8, 8), (9, 8), (6, 9), (7, 9), (8, 9), (9, 9), (5, 10), (6, 10), (9, 10), (10, 10)]:
-    tpl.putpixel(p, star)
+for y in range(16):
+    for x in range(16):
+        ch = STAR[y][x] if STAR[y][x] != "." else CARD[y][x]
+        if ch != ".":
+            tpl.putpixel((x, y), PAL[ch])
 save("nether_star_upgrade_smithing_template.png", tpl)
 
 # empty smithing-table slot icon for the base (ring) slot: dark grey silhouette
