@@ -38,7 +38,6 @@
   "screen.travelersring.delete_confirm_title": "Forget return point?",
   "screen.travelersring.delete_confirm_body": "You won't be able to get back to where you left.",
   "screen.travelersring.xp_waived": "No XP cost in creative",
-  "screen.travelersring.xp_have": "You have %s XP",
   "screen.travelersring.saved": "Return point: %s (%s)",
   "screen.travelersring.saved_unreadable": "The return point is corrupted. Forget it to use the ring again.",
   "screen.travelersring.not_here": "This ring doesn't work in this dimension.",

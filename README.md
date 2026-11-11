@@ -47,7 +47,7 @@ The menu shows what the server says is currently possible:
 
 * No saved location → one **"Teleport to ..."** button per destination with its XP cost (greyed out with the reason if not available).
   Under each button is an XP bar filled to that cost, with the level number beside it, so you can see what 10 points actually looks like.
-  Your own XP bar is shown at the top for comparison. The cost number turns red if you can't afford it.
+  The cost number turns red if you can't afford it.
 * Saved location → **"Return to saved location (free)"** and **"Delete saved location"** (asks to confirm).
   A new teleport is not offered until the saved location is returned to or deleted.
 

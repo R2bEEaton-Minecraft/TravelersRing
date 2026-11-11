@@ -30,7 +30,6 @@ public class RingScreen extends Screen {
     private static final ResourceLocation ICONS = new ResourceLocation("minecraft", "textures/gui/icons.png");
     private static final int BAR_W = 182;
     private static final int BAR_H = 5;
-    private static final int HEADER_H = 52;
     private static final int ROW_PLAIN = 24;
     private static final int ROW_WITH_BAR = 32;
 
@@ -38,7 +37,7 @@ public class RingScreen extends Screen {
     /** XP bars to draw (the cost under each teleport button), filled in by init(). */
     private final List<Bar> bars = new ArrayList<>();
     private int startY;
-    private boolean showPlayerBar;
+    private int headerH;
 
     private record Bar(int x, int y, int points, boolean affordable) {
     }
@@ -70,14 +69,15 @@ public class RingScreen extends Screen {
 
         // Cost bars only if everything still fits on screen; otherwise fall back to the compact layout
         boolean barsOn = !data.costsWaived();
-        int total = HEADER_H + targets.size() * (barsOn ? ROW_WITH_BAR : ROW_PLAIN) + otherRows * ROW_PLAIN + 32;
+        // title + status line, plus a "no XP cost" line in creative
+        headerH = data.costsWaived() ? 44 : 32;
+        int total = headerH + targets.size() * (barsOn ? ROW_WITH_BAR : ROW_PLAIN) + otherRows * ROW_PLAIN + 32;
         if (barsOn && total > this.height - 8) {
             barsOn = false;
-            total = HEADER_H + targets.size() * ROW_PLAIN + otherRows * ROW_PLAIN + 32;
+            total = headerH + targets.size() * ROW_PLAIN + otherRows * ROW_PLAIN + 32;
         }
-        showPlayerBar = !data.costsWaived();
         startY = Math.max(4, (this.height - total) / 2);
-        int y = startY + HEADER_H;
+        int y = startY + headerH;
 
         for (int i = 0; i < targets.size(); i++) {
             MenuData.TargetView t = targets.get(i);
@@ -160,13 +160,11 @@ public class RingScreen extends Screen {
         this.renderBackground(g);
         int cx = this.width / 2;
         g.drawCenteredString(this.font, Component.translatable("screen.travelersring.heading", tierName()).withStyle(ChatFormatting.BOLD), cx, startY, 0xFFFFFF);
-        g.drawCenteredString(this.font, data.costsWaived()
-                ? Component.translatable("screen.travelersring.xp_waived")
-                : Component.translatable("screen.travelersring.xp_have", data.playerXp()), cx, startY + 12, 0xA0E0A0);
-        if (showPlayerBar) {
-            drawXpBar(g, cx - BAR_W / 2, startY + 25, data.playerXp(), 0x80FF20);
+        int statusY = startY + 14;
+        if (data.costsWaived()) {
+            g.drawCenteredString(this.font, Component.translatable("screen.travelersring.xp_waived"), cx, statusY, 0xA0E0A0);
+            statusY += 12;
         }
-        int statusY = startY + 38;
         if (data.saved() != null) {
             g.drawCenteredString(this.font, Component.translatable("screen.travelersring.saved", RingText.dimension(data.saved().dimension()),
                     RingText.pos(data.saved().x(), data.saved().y(), data.saved().z())), cx, statusY, 0x80D0FF);
