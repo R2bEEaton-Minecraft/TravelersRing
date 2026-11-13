@@ -83,15 +83,17 @@ public class LogicTests {
             check(up1.is(ModItems.TRAVELERS_RING_NETHERITE.get()), "first upgrade yields the Netherite ring, got " + up1);
             eq(Optional.of(rp), RingData.getReturn(up1), "return preserved by upgrade 1");
 
-            // upgrade 2: custom template + first-upgrade ring + netherite ingot
-            Container c2 = new SimpleContainer(new ItemStack(ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get()), up1, new ItemStack(Items.NETHERITE_INGOT));
+            // upgrade 2: custom template + first-upgrade ring + nether star
+            Container c2 = new SimpleContainer(new ItemStack(ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get()), up1, new ItemStack(Items.NETHER_STAR));
             ItemStack up2 = assembleSmithing(level, c2);
             check(up2.is(ModItems.TRAVELERS_RING_NETHER_STAR.get()), "second upgrade yields the Nether Star ring, got " + up2);
             eq(Optional.of(rp), RingData.getReturn(up2), "return preserved by upgrade 2");
 
             // the base ring must NOT be accepted by the second upgrade (needs the first-upgrade ring)
-            Container bad = new SimpleContainer(new ItemStack(ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get()), TestSupport.ring(0), new ItemStack(Items.NETHERITE_INGOT));
+            Container bad = new SimpleContainer(new ItemStack(ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get()), TestSupport.ring(0), new ItemStack(Items.NETHER_STAR));
             check(findSmithing(level, bad) == null, "base ring must not skip straight to Nether Star tier");
+            Container ingot = new SimpleContainer(new ItemStack(ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get()), TestSupport.ring(1), new ItemStack(Items.NETHERITE_INGOT));
+            check(findSmithing(level, ingot) == null, "second upgrade no longer takes a netherite ingot");
         });
     }
 
@@ -111,23 +113,26 @@ public class LogicTests {
     }
 
     @GameTest(template = "empty")
-    public static void template_crafting_recipe_exists(GameTestHelper helper) {
+    public static void template_duplication_recipe_exists(GameTestHelper helper) {
         run(helper, () -> {
             var rm = helper.getLevel().getRecipeManager();
             var recipe = rm.byKey(new ResourceLocation("travelersring", "nether_star_upgrade_smithing_template"));
-            check(recipe.isPresent(), "template crafting recipe is registered");
-            check(recipe.get().getResultItem(helper.getLevel().registryAccess()).is(ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get()), "recipe result");
+            check(recipe.isPresent(), "template duplication recipe is registered");
+            ItemStack result = recipe.get().getResultItem(helper.getLevel().registryAccess());
+            check(result.is(ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get()), "recipe result");
+            eq(2, result.getCount(), "duplication makes 2 templates");
             List<String> ingredients = recipe.get().getIngredients().stream()
                     .map(i -> i.getItems()[0].getItem().toString()).sorted().toList();
-            eq(List.of("nether_star", "netherite_upgrade_smithing_template"), ingredients, "template recipe ingredients");
+            eq(List.of("diamond", "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
+                    "end_stone", "nether_star_upgrade_smithing_template"), ingredients, "vanilla-style duplication: 7 diamonds + template + end stone");
         });
     }
 
     @GameTest(template = "empty")
     public static void config_defaults_match_brief(GameTestHelper helper) {
         run(helper, () -> {
-            eq(CostMode.FLAT, RingConfig.COST_MODE.get(), "default cost mode is FLAT (provisional)");
-            eq(10, RingConfig.FLAT_COST.get(), "default flat cost = 10 XP points");
+            eq(CostMode.PER_BLOCK, RingConfig.COST_MODE.getDefault(), "default cost mode is PER_BLOCK (client request)");
+            eq(4.0, RingConfig.PER_BLOCK_COST.getDefault(), "default = 4 XP points per block");
             eq(0.5, RingConfig.NETHERITE_MULTIPLIER.get(), "first upgrade halves cost");
             eq(0.5, RingConfig.NETHER_STAR_MULTIPLIER.get(), "second upgrade multiplier (provisional)");
             check(Set.of("minecraft:overworld").equals(Set.copyOf(RingConfig.BASE_DIMENSIONS.get())), "base ring is Overworld-only by default");
@@ -233,13 +238,31 @@ public class LogicTests {
         });
     }
 
+    @GameTest(template = "empty", timeoutTicks = 400)
+    public static void template_loot_in_end_city_chests(GameTestHelper helper) {
+        run(helper, () -> {
+            ServerLevel level = helper.getLevel();
+            int trials = 2000;
+            int hitsTarget = countItems(level, "minecraft:chests/end_city_treasure", trials, ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get());
+            int hitsOther = countItems(level, "minecraft:chests/simple_dungeon", trials, ModItems.NETHER_STAR_UPGRADE_TEMPLATE.get());
+            double expected = trials * RingConfig.TEMPLATE_LOOT_CHANCE.get();
+            System.out.println("[travelersring-test] end_city_treasure templates=" + hitsTarget + "/" + trials + " (expected ~" + expected + "), dungeon=" + hitsOther);
+            check(hitsTarget > expected * 0.7 && hitsTarget < expected * 1.3, "end city template rate " + hitsTarget + "/" + trials + " should be near " + expected);
+            eq(0, hitsOther, "templates in a non-target table");
+        });
+    }
+
     private static int countRings(ServerLevel level, String table, int trials) {
+        return countItems(level, table, trials, ModItems.TRAVELERS_RING.get());
+    }
+
+    private static int countItems(ServerLevel level, String table, int trials, net.minecraft.world.item.Item item) {
         LootTable lt = level.getServer().getLootData().getLootTable(new ResourceLocation(table));
         int rings = 0;
         for (int i = 0; i < trials; i++) {
             LootParams params = new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN, Vec3.ZERO).create(LootContextParamSets.CHEST);
             for (ItemStack s : lt.getRandomItems(params)) {
-                if (s.is(ModItems.TRAVELERS_RING.get())) {
+                if (s.is(item)) {
                     rings++;
                 }
             }

@@ -53,6 +53,11 @@ public final class RingConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> LOOT_TABLES;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> LOOT_DIMENSIONS;
 
+    // [template_loot]
+    public static final ForgeConfigSpec.BooleanValue TEMPLATE_LOOT_ENABLED;
+    public static final ForgeConfigSpec.DoubleValue TEMPLATE_LOOT_CHANCE;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> TEMPLATE_LOOT_TABLES;
+
     public static final List<String> DEFAULT_LOOT_TABLES = List.of(
             "minecraft:chests/simple_dungeon",
             "minecraft:chests/abandoned_mineshaft",
@@ -77,15 +82,17 @@ public final class RingConfig {
                 "What a teleport to spawn costs. Costs are in experience points, not levels.",
                 "Returning to the saved spot, forgetting it, and picking a respawn point are always free."
         ).push("xp");
-        COST_MODE = b.comment("FLAT: every teleport costs flat_cost. PER_BLOCK: cost grows with distance.")
-                .defineEnum("cost_mode", CostMode.FLAT);
+        // Keys were renamed (cost_mode -> cost_type, per_block_cost -> xp_per_block) when the default moved to
+        // per-block, so config files written by older builds pick up the new default instead of keeping FLAT.
+        COST_MODE = b.comment("PER_BLOCK: cost grows with distance. FLAT: every teleport costs flat_cost.")
+                .defineEnum("cost_type", CostMode.PER_BLOCK);
         FLAT_COST = b.comment("FLAT mode: XP points per teleport with the base ring.")
                 .defineInRange("flat_cost", 10, 0, 1_000_000);
         PER_BLOCK_COST = b.comment(
                         "PER_BLOCK mode: XP points per block of distance (X/Z only, height is ignored).",
-                        "10.0 is very expensive: 1000 blocks costs 10,000 points. Something like 0.05 is more playable.",
+                        "At 4.0, 100 blocks costs 400 points and 1000 blocks costs 4000 points, before the ring's multiplier.",
                         "Between dimensions, both points are converted to Overworld coordinates first (Nether = x8).")
-                .defineInRange("per_block_cost", 10.0, 0.0, 1_000_000.0);
+                .defineInRange("xp_per_block", 4.0, 0.0, 1_000_000.0);
         PER_BLOCK_MAX_COST = b.comment("PER_BLOCK mode: most a teleport can cost before the ring multiplier. 0 = no limit.")
                 .defineInRange("per_block_max_cost", 0, 0, 1_000_000_000);
         NETHERITE_MULTIPLIER = b.comment("Cost multiplier for the Netherite ring.")
@@ -143,6 +150,17 @@ public final class RingConfig {
                 .defineListAllowEmpty("dimensions", List.of("minecraft:overworld"), RingConfig::isResourceLocation);
         b.pop();
 
+        b.comment(
+                "Where the Nether Star Upgrade Smithing Template turns up in chests. Uses chest loot table ids, as above.",
+                "Once found, it can be copied like vanilla's templates: 7 diamonds + the template + end stone makes 2."
+        ).push("template_loot");
+        TEMPLATE_LOOT_ENABLED = b.comment("Add the template to the loot tables below.").define("enabled", true);
+        TEMPLATE_LOOT_CHANCE = b.comment("Chance (0.0 to 1.0) that an opened chest in the list holds a template.")
+                .defineInRange("chance", 0.2, 0.0, 1.0);
+        TEMPLATE_LOOT_TABLES = b.comment("Loot tables that can contain the template. minecraft:chests/end_city_treasure is the End City chest.")
+                .defineListAllowEmpty("target_loot_tables", List.of("minecraft:chests/end_city_treasure"), RingConfig::isLootPattern);
+        b.pop();
+
         SPEC = b.build();
     }
 
@@ -169,6 +187,10 @@ public final class RingConfig {
             }
         }
         return out;
+    }
+
+    public static List<String> templateLootPatterns() {
+        return new ArrayList<>(TEMPLATE_LOOT_TABLES.get());
     }
 
     public static List<String> lootPatterns() {

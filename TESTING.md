@@ -2,14 +2,14 @@
 
 Prerequisites: JDK 17 available to Gradle (the toolchain finds it), internet on first run (Forge/Curios download).
 
-## 1. Automated in-world tests (40 GameTests)
+## 1. Automated in-world tests (41 GameTests)
 
 ```
 ./gradlew runGameTestServer
 ```
 Starts a headless Forge server with Curios and this mod, builds mock players that go through the real
 `PlayerList.placeNewPlayer` / `respawn` code paths, and runs the suite. Success ends with
-`All 40 required tests passed :)`; failures are listed by name with the assertion message. (~25 s.)
+`All 41 required tests passed :)`; failures are listed by name with the assertion message. (~25 s.)
 Tests live in `src/gametest/` and are **not** shipped in the JAR.
 
 What they cover: ring NBT persistence (including a real logout/login), smithing upgrades preserving data, cost modes,
@@ -17,7 +17,8 @@ XP-point maths, destination validation (missing bed, empty/missing anchor, absen
 site, world border), per-dimension spawn tracking through real vanilla paths (sleeping, `/spawnpoint`, anchor use, cancelled
 events), tier/dimension rules, duplicate and forged requests, death retention (slots, keepInventory, vanishing, no loss/dup,
 full inventory), the ring's Curios drop rules in both config modes, the death-screen respawn choice, loot-modifier rate,
-Curios slot validity, packet round-trips.
+Curios slot validity, packet round-trips, the template's End City loot rate and duplication recipe.
+The teleport tests pin `FLAT` 10 in memory so their exact XP checks stay readable; per-block maths has its own tests.
 
 ## 2. Dedicated server with the real, distributable JAR
 
@@ -34,11 +35,13 @@ Dev client: `./gradlew runClient` (or `-PquickPlay=host:port` to join a server).
 
 1. `/give @s travelersring:travelers_ring`; `/curios replace ring 0 @s with travelersring:travelers_ring`;
    `/xp add @s 100 points`. Set a spawn (sleep in a bed or `/spawnpoint`).
-2. Press **R** (rebindable). The ring screen lists "Go to Overworld: Bed (10 XP)". Click it: you move to the bed, XP −10.
+2. Walk ~100 blocks from your spawn. Press **R** (rebindable). The ring screen lists "Go to Overworld: Bed (~400 XP)"
+   with an XP bar and a line like `Level 30 → 25 (-5)`. Click it: you move to the bed and drop to that level.
 3. Press **R** again: the screen offers **Return** and **Delete** only. Return: back where you started, nothing charged, return cleared.
 4. Hover the ring: tooltip shows the saved return while one exists. Right-click it while held: same menu.
 5. Put the ring + Netherite template + ingot in a Smithing Table, upgrade, confirm the saved return survives (hover).
-6. Craft the Nether Star template (Netherite template + Nether Star), upgrade to the Nether Star ring (template + netherite ring + ingot).
+6. Get a Nether Star template (End City chest, or `/give @s travelersring:nether_star_upgrade_smithing_template`), copy it
+   (7 diamonds + template + end stone = 2), then upgrade to the Nether Star ring (template + netherite ring + Nether Star).
 7. Nether Star ring: set a bed spawn, then charge+click a Respawn Anchor in the Nether, then another bed. Press **R**: entries for each dimension.
 8. Fill hotbar/armor/offhand/other items, `/kill`. On respawn only held slot, offhand, armor return; the rest is on the ground.
    Death screen shows **Respawn at: ...**; click to cycle, then Respawn.

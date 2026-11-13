@@ -1,8 +1,8 @@
 # Verification results
 
 Run on 2026-11-10, Windows 11, JDK 17 (Temurin 17.0.16), Gradle 8.8, ForgeGradle 6, Forge 47.4.0, Curios 5.14.1+1.20.1.
-Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `d6fb269a7d9170c149063a58c3aaed46872ef92d9988c440f09717a6095ea2b7`
-(138,306 bytes; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
+Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `0ba28a24b59f3ee92ae5420e921c61f435a3c333a28d9af74002956a0d603a82`
+(141,593 bytes, rebuilt 2026-11-13; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
 
 ## What was actually run and what happened
 
@@ -17,6 +17,7 @@ Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `d6fb269a7d9170c149063a58c3
 | 7 | After the wording/texture/config-comment pass: `./gradlew clean build runGameTestServer`, then the new JAR (hash above) on the real server **with JEI 15.56.0.205 added** | Build OK, **40 / 40 GameTests passed**. Server: `Done (2.2s)`, datapacks `mod:forge, mod:curios, mod:travelersring, mod:jei`, 10 curio slots, no errors from the mod (the only ERROR was the console reader failing on my piped stdin, unrelated). |
 | 8 | Dev client (now with JEI in its runtime classpath) joined that server | Joined. JEI started (`Starting JEI took 652.9 ms`, `Registering recipes ... 284 ms`) with no JEI or `travelersring` warnings/errors in the client log. I did **not** open JEI's screen to look at the ring recipes (no working GUI input, see below). |
 | 9 | Template and ring textures redrawn (rings: banded, gem-set style), rebuilt: `clean build runGameTestServer` | Build OK, 40 / 40 passed. The server was not re-booted for this texture-only change. The new sprites were only compared visually as a PNG against the vanilla one, not in-game. |
+| 10 | Client feedback 2026-11-13 (4 XP per block, level-drop line on the ring screen, Nether Star template in End City chests + end-stone duplication, Nether Star as the smithing addition): `build runGameTestServer` | Build OK, **41 / 41 passed** (new: End City template rate 392/2000 vs ~400 expected, none in a dungeon chest; duplication recipe; ingot no longer accepted). Real dedicated server booted with the new JAR (SHA below) and an **old-style config containing `cost_mode = "FLAT"`**: Forge corrected it to `cost_type = "PER_BLOCK"`, `xp_per_block = 4.0`, added `[template_loot]`, `Done (2.8s)`, clean stop. The new level-drop line on the ring screen was **not seen in-game**, only compiled. |
 
 ## GameTest coverage (40)
 

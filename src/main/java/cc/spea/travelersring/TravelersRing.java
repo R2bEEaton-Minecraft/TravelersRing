@@ -2,6 +2,7 @@ package cc.spea.travelersring;
 
 import cc.spea.travelersring.config.RingConfig;
 import cc.spea.travelersring.loot.AddRingLootModifier;
+import cc.spea.travelersring.loot.AddTemplateLootModifier;
 import cc.spea.travelersring.net.Network;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
@@ -26,6 +27,7 @@ public class TravelersRing {
 
     static {
         LOOT_MODIFIERS.register("add_ring", AddRingLootModifier.CODEC);
+        LOOT_MODIFIERS.register("add_template", AddTemplateLootModifier.CODEC);
     }
 
     public TravelersRing() {

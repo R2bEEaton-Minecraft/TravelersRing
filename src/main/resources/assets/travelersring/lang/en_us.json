@@ -8,9 +8,9 @@
 
   "upgrade.travelersring.nether_star_upgrade": "Nether Star Upgrade",
   "item.travelersring.smithing_template.nether_star_upgrade.applies_to": "Netherite Traveler's Ring",
-  "item.travelersring.smithing_template.nether_star_upgrade.ingredients": "Netherite Ingot",
+  "item.travelersring.smithing_template.nether_star_upgrade.ingredients": "Nether Star",
   "item.travelersring.smithing_template.nether_star_upgrade.base_slot_description": "Add Netherite Traveler's Ring",
-  "item.travelersring.smithing_template.nether_star_upgrade.additions_slot_description": "Add Netherite Ingot",
+  "item.travelersring.smithing_template.nether_star_upgrade.additions_slot_description": "Add Nether Star",
 
   "key.travelersring.use": "Use Traveler's Ring",
   "key.categories.travelersring": "Traveler's Ring",
@@ -32,6 +32,8 @@
   "screen.travelersring.free": "Free",
   "screen.travelersring.xp": "%s XP",
   "screen.travelersring.need_xp": "You need %s XP. You have %s.",
+  "screen.travelersring.levels_change": "Level %s → %s (-%s)",
+  "screen.travelersring.levels_short": "%s XP short",
   "screen.travelersring.fallback_world_spawn": "Your spawn point is gone, so this goes to the world spawn.",
   "screen.travelersring.return": "Return (free)",
   "screen.travelersring.delete": "Forget return point",

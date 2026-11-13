@@ -31,15 +31,15 @@ public class RingScreen extends Screen {
     private static final int BAR_W = 182;
     private static final int BAR_H = 5;
     private static final int ROW_PLAIN = 24;
-    private static final int ROW_WITH_BAR = 40;
+    private static final int ROW_WITH_BAR = 50;
 
     private final MenuData data;
-    /** XP bars to draw (the cost under each teleport button), filled in by init(). */
+    /** XP bars to draw (the cost under each teleport button, plus the level drop it causes), filled in by init(). */
     private final List<Bar> bars = new ArrayList<>();
     private int startY;
     private int headerH;
 
-    private record Bar(int x, int y, int points, boolean affordable) {
+    private record Bar(int x, int y, int points, boolean affordable, Component levels) {
     }
 
     public RingScreen(MenuData data) {
@@ -94,7 +94,7 @@ public class RingScreen extends Screen {
             }
             addRenderableWidget(b);
             if (barsOn && t.valid() && t.cost() > 0) {
-                bars.add(new Bar(this.width / 2 - BAR_W / 2, y + 30, t.cost(), affordable));
+                bars.add(new Bar(this.width / 2 - BAR_W / 2, y + 30, t.cost(), affordable, levelChange(t.cost(), affordable)));
             }
             y += barsOn ? ROW_WITH_BAR : ROW_PLAIN;
         }
@@ -119,6 +119,16 @@ public class RingScreen extends Screen {
             y += ROW_PLAIN;
         }
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, btn -> onClose()).bounds(x, y + 6, w, 20).build());
+    }
+
+    /** "Level 30 → 27 (-3)": what paying {@code cost} does to the player's level. */
+    private Component levelChange(int cost, boolean affordable) {
+        if (!affordable) {
+            return Component.translatable("screen.travelersring.levels_short", cost - data.playerXp());
+        }
+        int before = XpHelper.levelForPoints(data.playerXp());
+        int after = XpHelper.levelForPoints(data.playerXp() - cost);
+        return Component.translatable("screen.travelersring.levels_change", before, after, before - after);
     }
 
     private Component describe(MenuData.TargetView t) {
@@ -177,6 +187,7 @@ public class RingScreen extends Screen {
         }
         for (Bar bar : bars) {
             drawXpBar(g, bar.x(), bar.y(), bar.points(), bar.affordable() ? 0x80FF20 : 0xFF5555);
+            g.drawCenteredString(this.font, bar.levels(), cx, bar.y() + BAR_H + 3, bar.affordable() ? 0xC0C0C0 : 0xFF5555);
         }
         super.render(g, mouseX, mouseY, partial);
     }

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "entries": [
-    "travelersring:add_ring"
+    "travelersring:add_ring",
+    "travelersring:add_template"
   ]
 }

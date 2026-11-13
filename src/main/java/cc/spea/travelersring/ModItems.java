@@ -51,8 +51,8 @@ public final class ModItems {
     }
 
     private static Item createNetherStarTemplate() {
-        // Same construction vanilla uses for its Netherite Upgrade template. Slot icons: the ring placeholder
-        // (base slot) and vanilla's ingot silhouette (additions slot).
+        // Same construction vanilla uses for its Netherite Upgrade template. Slot icons: the ring outline
+        // (base slot); vanilla has no Nether Star outline, so the additions slot has no icon.
         return new SmithingTemplateItem(
                 Component.translatable("item.travelersring.smithing_template.nether_star_upgrade.applies_to").withStyle(ChatFormatting.BLUE),
                 Component.translatable("item.travelersring.smithing_template.nether_star_upgrade.ingredients").withStyle(ChatFormatting.BLUE),
@@ -60,6 +60,6 @@ public final class ModItems {
                 Component.translatable("item.travelersring.smithing_template.nether_star_upgrade.base_slot_description"),
                 Component.translatable("item.travelersring.smithing_template.nether_star_upgrade.additions_slot_description"),
                 List.of(new ResourceLocation(TravelersRing.MOD_ID, "item/empty_slot_ring")),
-                List.of(new ResourceLocation("item/empty_slot_ingot")));
+                List.of());
     }
 }

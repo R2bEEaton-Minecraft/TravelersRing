@@ -33,6 +33,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class TestSupport {
     private static final AtomicInteger COUNTER = new AtomicInteger();
 
+    static {
+        // The teleport/menu tests check exact XP arithmetic written against a flat 10-point cost. Pin that in memory
+        // for the test run so it doesn't depend on the shipped default (PER_BLOCK); the per-block maths is covered
+        // separately by CostCalculator tests, and config_defaults_match_brief checks the real defaults.
+        cc.spea.travelersring.config.RingConfig.COST_MODE.set(cc.spea.travelersring.config.RingConfig.CostMode.FLAT);
+        cc.spea.travelersring.config.RingConfig.FLAT_COST.set(10);
+    }
+
     private TestSupport() {
     }
 

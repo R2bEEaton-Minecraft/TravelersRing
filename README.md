@@ -28,13 +28,14 @@ If a modpack already assigns a `ring` slot, the two simply coexist.
 
 | Tier | Item | Works in | XP cost (default) | Respawn/death features |
 |---|---|---|---|---|
-| Base | Traveler's Ring | Overworld | 10 XP points (flat) | none |
-| First upgrade | Netherite Traveler's Ring | Overworld + Nether | half (5) | none |
-| Second upgrade | Nether Star Traveler's Ring | **any** dimension | half (5) *(provisional)* | keeps held items + armor on death; pick any valid spawn to respawn at, free |
+| Base | Traveler's Ring | Overworld | 4 XP points per block | none |
+| First upgrade | Netherite Traveler's Ring | Overworld + Nether | half (2 per block) | none |
+| Second upgrade | Nether Star Traveler's Ring | **any** dimension | half (2 per block) *(provisional)* | keeps held items + armor on death; pick any valid spawn to respawn at, free |
 
 * "Free return" and "delete saved location" are available and free on **all** tiers.
 * There is **no cooldown**.
-* XP is measured in **experience points**, not levels (10 points is a fraction of one level at level 7+).
+* XP is measured in **experience points**, not levels. The ring screen shows each cost as an XP bar plus the levels
+  you would drop to, e.g. `Level 30 → 25 (-5)`.
 
 ## Controls
 
@@ -113,8 +114,8 @@ If a Nether Star ring is **equipped in a Curios slot when you die**:
 |---|---|
 | Traveler's Ring | **Not craftable.** Found in loot (below); `/give` or creative tab for testing |
 | Netherite Traveler's Ring | Smithing Table: **Netherite Upgrade Smithing Template** + Traveler's Ring + **Netherite Ingot** |
-| Nether Star Upgrade Smithing Template | Crafting (shapeless): **Netherite Upgrade Smithing Template** + **Nether Star** *(provisional, see ASSUMPTIONS)* |
-| Nether Star Traveler's Ring | Smithing Table: **Nether Star Upgrade Smithing Template** + Netherite Traveler's Ring + **Netherite Ingot** *(addition provisional)* |
+| Nether Star Upgrade Smithing Template | Found in **End City** chests (below). Copy it like vanilla's templates: **7 Diamonds** around the **template** (top middle) and **End Stone** (centre) makes **2** |
+| Nether Star Traveler's Ring | Smithing Table: **Nether Star Upgrade Smithing Template** + Netherite Traveler's Ring + **Nether Star** |
 
 Smithing preserves all NBT, so a saved return location survives upgrading (tested).
 Files: `src/main/resources/data/travelersring/recipes/*.json`.
@@ -125,6 +126,9 @@ A global loot modifier adds a base ring to configured **chest loot tables** with
 target chest, Overworld only). Default targets are Overworld dungeon/structure chests: simple dungeon, abandoned mineshaft,
 stronghold (corridor/crossing/library), desert pyramid, jungle temple, woodland mansion, pillager outpost, ancient city,
 ruined portal, shipwreck treasure, big underwater ruin, rare trail ruins.
+
+The **Nether Star Upgrade Smithing Template** is added to End City chests (`minecraft:chests/end_city_treasure`)
+with a **20 %** chance per opened chest (`template_loot.*` in the config).
 
 > **Loot-table ids are not structure ids.** `minecraft:desert_pyramid` is a *structure*; its chest is rolled from the
 > *loot table* `minecraft:chests/desert_pyramid`. The config takes **loot-table ids** (the ones that look like
@@ -137,9 +141,9 @@ ruined portal, shipwreck treasure, big underwater ruin, rare trail ruins.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `xp.cost_mode` | `FLAT` | `FLAT` or `PER_BLOCK` |
-| `xp.flat_cost` | `10` | XP points per teleport (Base ring) |
-| `xp.per_block_cost` | `10.0` | XP points per horizontal block in `PER_BLOCK` mode. **10.0 is very steep** (client's literal words, ≈ level 63 for 1,000 blocks); try `0.05` |
+| `xp.cost_type` | `PER_BLOCK` | `PER_BLOCK` or `FLAT` |
+| `xp.xp_per_block` | `4.0` | XP points per horizontal block in `PER_BLOCK` mode (Base ring) |
+| `xp.flat_cost` | `10` | XP points per teleport in `FLAT` mode (Base ring) |
 | `xp.per_block_max_cost` | `0` | cap on the base cost before tier multipliers (0 = none) |
 | `xp.netherite_multiplier` | `0.5` | first upgrade cost factor |
 | `xp.nether_star_multiplier` | `0.5` | second upgrade cost factor (provisional) |
@@ -154,18 +158,27 @@ ruined portal, shipwreck treasure, big underwater ruin, rare trail ruins.
 | `loot.enabled` / `loot.chance` | `true` / `0.05` | loot injection |
 | `loot.target_loot_tables` | see above | chest **loot-table** ids (wildcards allowed) |
 | `loot.dimensions` | `[minecraft:overworld]` | only inject for chests in these dimensions (empty = any) |
+| `template_loot.enabled` / `template_loot.chance` | `true` / `0.2` | Nether Star template in chests |
+| `template_loot.target_loot_tables` | `[minecraft:chests/end_city_treasure]` | chest loot-table ids for the template |
 
-**Cost math.** `FLAT`: cost = `flat_cost`. `PER_BLOCK`: cost = `ceil(distance × per_block_cost)`, capped by
+These two keys were renamed in this version: `cost_mode` → `cost_type`, `per_block_cost` → `xp_per_block`. A config file
+from an older build is updated to the new per-block default automatically; old values for those two keys are not carried over.
+
+**Cost math.** `FLAT`: cost = `flat_cost`. `PER_BLOCK`: cost = `ceil(distance × xp_per_block)`, capped by
 `per_block_max_cost`; distance is **horizontal** (X/Z), and for cross-dimension trips both points are first converted to
 Overworld-equivalent coordinates using each dimension's coordinate scale (Nether ×8). Then the tier multiplier is applied
 and the result rounded **up** (never silently free). Return, delete and respawn choice never cost anything.
 
-| Trip (Base ring) | `FLAT` 10 | `PER_BLOCK` 10.0/block (literal) | `PER_BLOCK` 0.05/block |
-|---|---|---|---|
-| 10 blocks | 10 | 100 | 1 |
-| 200 blocks | 10 | 2,000 (≈ level 35) | 10 |
-| 1,000 blocks | 10 | 10,000 (≈ level 63) | 50 |
-| 5,000 blocks | 10 | 50,000 | 250 |
+| Trip | Base ring (4/block) | Netherite / Nether Star (2/block) |
+|---|---|---|
+| 10 blocks | 40 points (≈ level 4 from zero) | 20 |
+| 100 blocks | 400 (≈ level 17) | 200 (≈ level 11) |
+| 200 blocks | 800 (≈ level 23) | 400 (≈ level 17) |
+| 1,000 blocks | 4,000 (≈ level 44) | 2,000 (≈ level 34) |
+| 5,000 blocks | 20,000 (≈ level 83) | 10,000 (≈ level 63) |
+
+A player at level 30 drops 1 level for 40 points, 5 levels for 400 and 10 levels for 800. `xp.per_block_max_cost` caps
+long trips if needed.
 
 (Netherite and Nether Star rings pay half by default; each result is rounded up.)
 
