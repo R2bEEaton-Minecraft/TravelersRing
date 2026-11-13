@@ -17,7 +17,7 @@ Two smithing upgrades add the Nether, then every dimension, keeping your gear wh
 | Curios | **Required.** Built and tested against `5.14.1+1.20.1` (declared minimum `5.14.1`) |
 | Java | 17 |
 
-Install the JAR (`dist/travelersring-1.0.0.jar`) **and Curios** in `mods/` on the server **and** every client.
+Install the JAR (`dist/travelersring-1.0.1.jar`) **and Curios** in `mods/` on the server **and** every client.
 The mod is required on both sides (it has a network protocol and a client UI).
 
 The mod itself adds the `ring` Curios slot to players (`data/travelersring/curios/entities/player.json`).
@@ -185,7 +185,7 @@ long trips if needed.
 ## Building
 
 ```
-./gradlew build            # -> build/libs/travelersring-1.0.0.jar (reobfuscated, distributable)
+./gradlew build            # -> build/libs/travelersring-1.0.1.jar (reobfuscated, distributable)
 ```
 JDK 17 is used via Gradle's toolchain. The first build downloads Forge and Curios.
 The released JAR is also copied to `dist/`. See [TESTING.md](TESTING.md) to run the tests.

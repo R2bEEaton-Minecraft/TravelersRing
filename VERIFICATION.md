@@ -1,8 +1,8 @@
 # Verification results
 
 Run on 2026-11-10, Windows 11, JDK 17 (Temurin 17.0.16), Gradle 8.8, ForgeGradle 6, Forge 47.4.0, Curios 5.14.1+1.20.1.
-Deliverable: `dist/travelersring-1.0.0.jar`, SHA-256 `0ba28a24b59f3ee92ae5420e921c61f435a3c333a28d9af74002956a0d603a82`
-(141,593 bytes, rebuilt 2026-11-13; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
+Deliverable: `dist/travelersring-1.0.1.jar`, SHA-256 `bc22a353ad293c3433a3edabe6b0da982c21ed743712d8b50f7cf7e98ad08311`
+(141,590 bytes, version 1.0.1, built 2026-11-13 after `clean build`, 41 / 41 GameTests passed; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
 
 ## What was actually run and what happened
 
