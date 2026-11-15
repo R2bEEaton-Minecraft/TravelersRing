@@ -18,9 +18,28 @@ public record MenuData(RingSource source, int tier, boolean usableHere, @Nullabl
     public record SavedView(ResourceLocation dimension, int x, int y, int z) {
     }
 
-    /** kind = ordinal of {@code Destination.Kind}. reason = {@code Destination.Failure.key} when invalid. */
+    /**
+     * kind = ordinal of {@code Destination.Kind}. reason = {@code Destination.Failure.key} when invalid.
+     * block = a modded spawn block's id, so its own name can be shown (null otherwise).
+     */
     public record TargetView(String key, ResourceLocation dimension, int kind, boolean hasPos, int x, int y, int z,
-                             boolean valid, String reason, int cost, boolean fallback) {
+                             boolean valid, String reason, int cost, boolean fallback, @Nullable ResourceLocation block) {
+        public TargetView(String key, ResourceLocation dimension, int kind, boolean hasPos, int x, int y, int z,
+                          boolean valid, String reason, int cost, boolean fallback) {
+            this(key, dimension, kind, hasPos, x, y, z, valid, reason, cost, fallback, null);
+        }
+    }
+
+    static void writeBlock(FriendlyByteBuf buf, @Nullable ResourceLocation block) {
+        buf.writeBoolean(block != null);
+        if (block != null) {
+            buf.writeResourceLocation(block);
+        }
+    }
+
+    @Nullable
+    static ResourceLocation readBlock(FriendlyByteBuf buf) {
+        return buf.readBoolean() ? buf.readResourceLocation() : null;
     }
 
     private static final int MAX_TARGETS = 64;
@@ -50,6 +69,7 @@ public record MenuData(RingSource source, int tier, boolean usableHere, @Nullabl
             buf.writeUtf(t.reason(), 64);
             buf.writeVarInt(t.cost());
             buf.writeBoolean(t.fallback());
+            writeBlock(buf, t.block());
         }
         buf.writeVarInt(playerXp);
         buf.writeBoolean(costsWaived);
@@ -69,7 +89,7 @@ public record MenuData(RingSource source, int tier, boolean usableHere, @Nullabl
         for (int i = 0; i < n; i++) {
             targets.add(new TargetView(buf.readUtf(128), buf.readResourceLocation(), buf.readByte(), buf.readBoolean(),
                     buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readBoolean(), buf.readUtf(64),
-                    buf.readVarInt(), buf.readBoolean()));
+                    buf.readVarInt(), buf.readBoolean(), readBlock(buf)));
         }
         int xp = buf.readVarInt();
         boolean waived = buf.readBoolean();

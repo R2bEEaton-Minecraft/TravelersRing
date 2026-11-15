@@ -120,7 +120,7 @@ public final class RingService {
                     hasPos = true;
                 }
                 views.add(new MenuData.TargetView(t.key(), t.dimension(), kind, hasPos, x, y, z, valid,
-                        valid ? "" : t.resolution().failure().key, cost, t.fallback()));
+                        valid ? "" : t.resolution().failure().key, cost, t.fallback(), t.resolution().block()));
             }
         }
         return new MenuData(handle.source(), tier.level(), allowed, savedView, unreadable, views,
@@ -235,8 +235,11 @@ public final class RingService {
     }
 
     public static int costTo(ServerPlayer player, RingTier tier, Destination dest, CostCalculator.Settings settings) {
-        double fromScale = player.level().dimensionType().coordinateScale();
-        double toScale = dest.level().dimensionType().coordinateScale();
+        // Same dimension: real blocks travelled (a Nether trip must not cost 8x). Across dimensions: both points in
+        // Overworld-equivalent coordinates, so the coordinate scale doesn't add a surcharge.
+        boolean sameDim = player.level().dimension() == dest.level().dimension();
+        double fromScale = sameDim ? 1.0 : player.level().dimensionType().coordinateScale();
+        double toScale = sameDim ? 1.0 : dest.level().dimensionType().coordinateScale();
         return CostCalculator.cost(settings, tier, player.getX(), player.getZ(), fromScale, dest.x(), dest.z(), toScale);
     }
 

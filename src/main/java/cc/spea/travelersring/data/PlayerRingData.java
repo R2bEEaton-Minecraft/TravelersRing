@@ -34,7 +34,15 @@ import java.util.UUID;
 public final class PlayerRingData extends SavedData {
     public static final String NAME = "travelersring_players";
 
-    public record SpawnRecord(BlockPos pos, float angle, boolean forced, long time) {
+    /**
+     * @param block the block the spawn was set on (e.g. {@code minecraft:red_bed}, {@code enigmaticlegacy:end_anchor}),
+     *              or null if unknown (records from before 1.0.3). Lets modded spawn blocks that don't implement Forge's
+     *              respawn-position hook still be recognised later.
+     */
+    public record SpawnRecord(BlockPos pos, float angle, boolean forced, long time, @Nullable ResourceLocation block) {
+        public SpawnRecord(BlockPos pos, float angle, boolean forced, long time) {
+            this(pos, angle, forced, time, null);
+        }
     }
 
     public enum SlotKind {
@@ -188,6 +196,9 @@ public final class PlayerRingData extends SavedData {
             t.putFloat("Angle", s.getValue().angle());
             t.putBoolean("Forced", s.getValue().forced());
             t.putLong("Time", s.getValue().time());
+            if (s.getValue().block() != null) {
+                t.putString("Block", s.getValue().block().toString());
+            }
             list.add(t);
         }
         return list;
@@ -200,8 +211,9 @@ public final class PlayerRingData extends SavedData {
             if (dim == null || !t.contains("Pos")) {
                 continue;
             }
+            ResourceLocation block = t.contains("Block") ? ResourceLocation.tryParse(t.getString("Block")) : null;
             into.put(dim, new SpawnRecord(NbtUtils.readBlockPos(t.getCompound("Pos")), t.getFloat("Angle"),
-                    t.getBoolean("Forced"), t.getLong("Time")));
+                    t.getBoolean("Forced"), t.getLong("Time"), block));
         }
     }
 }

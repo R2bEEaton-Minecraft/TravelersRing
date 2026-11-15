@@ -17,7 +17,7 @@ Two smithing upgrades add the Nether, then every dimension, keeping your gear wh
 | Curios | **Required.** Built and tested against `5.14.1+1.20.1` (declared minimum `5.14.1`) |
 | Java | 17 |
 
-Install the JAR (`dist/travelersring-1.0.2.jar`) **and Curios** in `mods/` on the server **and** every client.
+Install the JAR (`dist/travelersring-1.0.3.jar`) **and Curios** in `mods/` on the server **and** every client.
 The mod is required on both sides (it has a network protocol and a client UI).
 
 The mod itself adds the `ring` Curios slot to players (`data/travelersring/curios/entities/player.json`).
@@ -76,6 +76,12 @@ A failed teleport never charges XP and never overwrites or clears a saved locati
   enough; you don't have to set your spawn there. Until you have used one, the Nether entry is greyed out and says why.
 * **Nether Star** – the **latest recorded spawnpoint for every dimension** (including modded dimensions), the last
   charged anchor per dimension (as above), plus the Overworld world-spawn fallback.
+
+**Modded spawn blocks** (e.g. Enigmatic Legacy's *Dimensional Anchor* in the End) work too. The ring remembers which
+block you set your spawn on; as long as that same block is still there (and, if it has a charge, isn't empty), the ring
+puts you on a safe spot next to it. The button shows the block's own name, e.g. "The End: Dimensional Anchor". Blocks in
+`usage.charge_counts_blocks` (default: the Dimensional Anchor) also count when you only *charge* them, like the vanilla
+Respawn Anchor. Tested against Enigmatic Legacy 2.30.1.
 
 Ring teleports **never consume Respawn Anchor charges** and never change your real spawnpoint.
 
@@ -157,6 +163,7 @@ with a **20 %** chance per opened chest (`template_loot.*` in the config).
 | `usage.base_dimensions` / `netherite_dimensions` | Overworld / Overworld+Nether | where each tier works |
 | `usage.nether_star_any_dimension` | `true` | else uses `nether_star_dimensions` |
 | `usage.blocked_dimensions` | `[]` | dimensions where no ring works |
+| `usage.charge_counts_blocks` | `[enigmaticlegacy:end_anchor]` | modded anchors where charging (not just setting your spawn) counts |
 | `safety.search_radius` / `search_vertical` | `3` / `4` | how far to look for a safe spot if the return point is blocked |
 | `death.retain_held_and_armor` | `true` | the Nether Star retention |
 | `death.ring_keeps_itself` | `false` | ring asks Curios to keep it on death |
@@ -171,8 +178,9 @@ These two keys were renamed in this version: `cost_mode` → `cost_type`, `per_b
 from an older build is updated to the new per-block default automatically; old values for those two keys are not carried over.
 
 **Cost math.** `FLAT`: cost = `flat_cost`. `PER_BLOCK`: cost = `ceil(distance × xp_per_block)`, capped by
-`per_block_max_cost`; distance is **horizontal** (X/Z), and for cross-dimension trips both points are first converted to
-Overworld-equivalent coordinates using each dimension's coordinate scale (Nether ×8). Then the tier multiplier is applied
+`per_block_max_cost`; distance is **horizontal** (X/Z) in real blocks when both points are in the same dimension (so a
+100-block Nether trip costs the same as a 100-block Overworld trip). For cross-dimension trips both points are first
+converted to Overworld-equivalent coordinates using each dimension's coordinate scale (Nether ×8). Then the tier multiplier is applied
 and the result rounded **up** (never silently free). Return, delete and respawn choice never cost anything.
 
 | Trip | Base ring (4/block) | Netherite / Nether Star (2/block) |
@@ -191,7 +199,7 @@ long trips if needed.
 ## Building
 
 ```
-./gradlew build            # -> build/libs/travelersring-1.0.2.jar (reobfuscated, distributable)
+./gradlew build            # -> build/libs/travelersring-1.0.3.jar (reobfuscated, distributable)
 ```
 JDK 17 is used via Gradle's toolchain. The first build downloads Forge and Curios.
 The released JAR is also copied to `dist/`. See [TESTING.md](TESTING.md) to run the tests.

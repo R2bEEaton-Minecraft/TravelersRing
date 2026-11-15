@@ -148,7 +148,7 @@ public class RingScreen extends Screen {
 
     private Component describe(MenuData.TargetView t) {
         Component where = RingText.dimension(t.dimension());
-        Component what = RingText.kind(t.kind());
+        Component what = RingText.kind(t.kind(), t.block());
         return Component.translatable("screen.travelersring.target", where, what);
     }
 

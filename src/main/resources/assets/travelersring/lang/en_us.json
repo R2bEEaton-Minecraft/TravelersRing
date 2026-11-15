@@ -71,6 +71,9 @@
   "failure.travelersring.no_spawn": "no spawn point set there",
   "failure.travelersring.no_anchor": "no respawn anchor yet: charge one with glowstone",
   "failure.travelersring.spawn_block_missing": "the bed is gone",
+  "failure.travelersring.spawn_block_gone": "the block you set your spawn at is gone",
+  "failure.travelersring.spawn_block_empty": "it has no charge",
+  "failure.travelersring.spawn_block_obstructed": "there's no safe spot next to it",
   "failure.travelersring.bed_unusable": "beds don't work there",
   "failure.travelersring.bed_obstructed": "the bed is blocked",
   "failure.travelersring.anchor_empty": "the respawn anchor has no charge",
@@ -84,6 +87,7 @@
   "kind.travelersring.world_spawn": "World Spawn",
   "kind.travelersring.return_point": "Return Point",
   "kind.travelersring.default": "Default",
+  "kind.travelersring.spawn_block": "Spawn Point",
 
   "dimension.travelersring.minecraft.overworld": "Overworld",
   "dimension.travelersring.minecraft.the_nether": "The Nether",

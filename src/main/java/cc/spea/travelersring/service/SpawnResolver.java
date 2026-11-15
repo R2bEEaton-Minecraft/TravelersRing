@@ -7,6 +7,10 @@ import cc.spea.travelersring.service.Destination.Failure;
 import cc.spea.travelersring.service.Destination.Kind;
 import cc.spea.travelersring.service.Destination.Resolution;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -68,10 +72,29 @@ public final class SpawnResolver {
                     .orElseGet(() -> Resolution.fail(Failure.BED_OBSTRUCTED, Kind.BED));
         }
         if (!rec.forced()) {
-            // Modded beds / respawn blocks implement Forge's hook; anything else means the bed is gone.
+            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+            // Modded beds / respawn blocks that implement Forge's hook say where to stand themselves.
             Optional<Vec3> stand = state.getRespawnPosition(EntityType.PLAYER, level, pos, rec.angle(), null);
-            return stand.map(v -> Resolution.ok(towards(level, v, pos, Kind.BED)))
-                    .orElseGet(() -> Resolution.fail(Failure.SPAWN_BLOCK_MISSING, Kind.BED));
+            if (stand.isPresent()) {
+                return Resolution.ok(towards(level, stand.get(), pos, Kind.SPAWN_BLOCK)).withBlock(id);
+            }
+            // Modded spawn blocks that handle respawning their own way (e.g. Enigmatic Legacy's Dimensional Anchor):
+            // accept the block the spawn was set on if it is still there. Old records (no block saved) only accept
+            // anchor-like blocks, which carry a charge.
+            boolean same = rec.block() != null ? rec.block().equals(id) : !state.isAir() && chargeOf(state).isPresent();
+            if (same && !state.isAir()) {
+                if (chargeOf(state).filter(c -> c <= 0).isPresent()) {
+                    return Resolution.fail(Failure.SPAWN_BLOCK_EMPTY, Kind.SPAWN_BLOCK).withBlock(id);
+                }
+                int r = Math.max(2, RingConfig.SAFE_SEARCH_RADIUS.get());
+                return SafeSpot.find(level, Vec3.atBottomCenterOf(pos.above()), r, 3)
+                        .map(v -> Resolution.ok(towards(level, v, pos, Kind.SPAWN_BLOCK)).withBlock(id))
+                        .orElseGet(() -> Resolution.fail(Failure.SPAWN_BLOCK_OBSTRUCTED, Kind.SPAWN_BLOCK).withBlock(id));
+            }
+            if (rec.block() != null && !(BuiltInRegistries.BLOCK.get(rec.block()) instanceof BedBlock)) {
+                return Resolution.fail(Failure.SPAWN_BLOCK_GONE, Kind.SPAWN_BLOCK).withBlock(rec.block());
+            }
+            return Resolution.fail(Failure.SPAWN_BLOCK_MISSING, Kind.BED);
         }
         // Forced spawn (/spawnpoint): same rule vanilla uses.
         BlockState above = level.getBlockState(pos.above());
@@ -109,6 +132,16 @@ public final class SpawnResolver {
         Optional<Vec3> spot = SafeSpot.find(level, desired, RingConfig.SAFE_SEARCH_RADIUS.get(), RingConfig.SAFE_SEARCH_VERTICAL.get());
         return spot.map(v -> Resolution.ok(new Destination(level, v.x, v.y, v.z, rp.yaw(), rp.pitch(), Kind.RETURN_POINT)))
                 .orElseGet(() -> Resolution.fail(Failure.UNSAFE, Kind.RETURN_POINT));
+    }
+
+    /** The block's charge, if it has an integer property called "charges" (vanilla anchor) or "charge" (modded anchors). */
+    public static Optional<Integer> chargeOf(BlockState state) {
+        for (Property<?> p : state.getProperties()) {
+            if (p instanceof IntegerProperty ip && (p.getName().equals("charges") || p.getName().equals("charge"))) {
+                return Optional.of(state.getValue(ip));
+            }
+        }
+        return Optional.empty();
     }
 
     private static Destination towards(ServerLevel level, Vec3 stand, BlockPos block, Kind kind) {

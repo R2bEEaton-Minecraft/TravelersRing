@@ -59,7 +59,7 @@ public final class DeathPicker {
         if (o.key().equals("world")) {
             return Component.translatable("screen.travelersring.respawn_world");
         }
-        return Component.translatable("screen.travelersring.respawn_entry", RingText.dimension(o.dimension()), RingText.kind(o.kind()),
+        return Component.translatable("screen.travelersring.respawn_entry", RingText.dimension(o.dimension()), RingText.kind(o.kind(), o.block()),
                 RingText.pos(o.x(), o.y(), o.z()));
     }
 

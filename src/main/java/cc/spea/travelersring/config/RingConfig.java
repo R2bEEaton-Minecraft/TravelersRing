@@ -37,6 +37,7 @@ public final class RingConfig {
     public static final ForgeConfigSpec.BooleanValue NETHER_STAR_ANY_DIMENSION;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> NETHER_STAR_DIMENSIONS;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> BLOCKED_DIMENSIONS;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CHARGE_COUNTS_BLOCKS;
 
     // [safety]
     public static final ForgeConfigSpec.IntValue SAFE_SEARCH_RADIUS;
@@ -113,6 +114,10 @@ public final class RingConfig {
                 .defineListAllowEmpty("nether_star_dimensions", List.of("minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"), RingConfig::isResourceLocation);
         BLOCKED_DIMENSIONS = b.comment("Dimensions where no ring works. Overrides everything above.")
                 .defineListAllowEmpty("blocked_dimensions", List.of(), RingConfig::isResourceLocation);
+        CHARGE_COUNTS_BLOCKS = b.comment(
+                        "Modded anchor blocks where just charging one (not only setting your spawn there) makes it a ring",
+                        "destination, like the vanilla Respawn Anchor. The block needs a charge property.")
+                .defineListAllowEmpty("charge_counts_blocks", List.of("enigmaticlegacy:end_anchor"), RingConfig::isResourceLocation);
         b.pop();
 
         b.comment("Return points are checked again when you use them, in case the spot became unsafe.").push("safety");

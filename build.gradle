@@ -74,6 +74,11 @@ repositories {
         name = 'JEI'
         url = 'https://maven.blamejared.com/'
     }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
+    }
 }
 
 dependencies {
@@ -87,6 +92,14 @@ dependencies {
     runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 
     gametestCompileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api")
+
+    // Compatibility testing only (./gradlew runGameTestServer -PwithEnigmatic): Enigmatic Legacy's Dimensional Anchor
+    // is a modded spawn block. Never a dependency of the shipped jar.
+    if (project.hasProperty('withEnigmatic')) {
+        runtimeOnly fg.deobf("maven.modrinth:enigmatic-legacy:2.30.1")
+        runtimeOnly fg.deobf("maven.modrinth:patchouli:1.20.1-85-forge")
+        runtimeOnly fg.deobf("maven.modrinth:caelus:3.2.0+1.20.1")
+    }
 }
 
 tasks.named('processResources', ProcessResources).configure {

@@ -91,7 +91,7 @@ public final class RespawnChoice {
             Resolution r = SpawnResolver.resolveRecorded(player.server, dim, e.getValue(), false);
             BlockPos p = e.getValue().pos();
             out.add(new RespawnOptionView(Targets.keyFor(e.getKey()), e.getKey(), r.kind().ordinal(), true,
-                    p.getX(), p.getY(), p.getZ(), r.isOk(), r.isOk() ? "" : r.failure().key));
+                    p.getX(), p.getY(), p.getZ(), r.isOk(), r.isOk() ? "" : r.failure().key, r.block()));
         }
         Resolution world = SpawnResolver.resolveWorldSpawn(player.server);
         BlockPos ws = player.server.overworld().getSharedSpawnPos();

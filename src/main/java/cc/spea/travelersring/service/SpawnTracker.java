@@ -2,7 +2,10 @@ package cc.spea.travelersring.service;
 
 import cc.spea.travelersring.data.PlayerRingData;
 import cc.spea.travelersring.data.PlayerRingData.SpawnRecord;
+import cc.spea.travelersring.config.RingConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -13,6 +16,8 @@ import net.minecraft.world.level.block.RespawnAnchorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -82,9 +87,11 @@ public final class SpawnTracker {
         }
         Level level = event.getLevel();
         BlockState state = level.getBlockState(event.getPos());
-        if (state.getBlock() instanceof RespawnAnchorBlock && RespawnAnchorBlock.canSetSpawn(level)) {
-            PENDING_ANCHORS.add(new PendingAnchor(player.getUUID(), level.dimension(), event.getPos().immutable(),
-                    state.getValue(RespawnAnchorBlock.CHARGE)));
+        boolean vanillaAnchor = state.getBlock() instanceof RespawnAnchorBlock && RespawnAnchorBlock.canSetSpawn(level);
+        boolean listed = !vanillaAnchor && RingConfig.CHARGE_COUNTS_BLOCKS.get().contains(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+        if (vanillaAnchor || listed) {
+            SpawnResolver.chargeOf(state).ifPresent(charge -> PENDING_ANCHORS.add(
+                    new PendingAnchor(player.getUUID(), level.dimension(), event.getPos().immutable(), charge)));
         }
     }
 
@@ -102,7 +109,7 @@ public final class SpawnTracker {
                 continue;
             }
             BlockState state = level.getBlockState(a.pos());
-            if (state.getBlock() instanceof RespawnAnchorBlock && state.getValue(RespawnAnchorBlock.CHARGE) > a.chargeBefore()) {
+            if (SpawnResolver.chargeOf(state).filter(c -> c > a.chargeBefore()).isPresent()) {
                 recordAnchor(player, a.dim().location(), a.pos());
             }
         }
@@ -110,7 +117,8 @@ public final class SpawnTracker {
 
     public static void recordAnchor(ServerPlayer player, ResourceLocation dim, BlockPos pos) {
         PlayerRingData data = PlayerRingData.get(player.server);
-        data.entry(player.getUUID()).anchors.put(dim, new SpawnRecord(pos.immutable(), 0f, false, player.server.overworld().getGameTime()));
+        data.entry(player.getUUID()).anchors.put(dim, new SpawnRecord(pos.immutable(), 0f, false, player.server.overworld().getGameTime(),
+                blockAt(player.server, dim, pos)));
         data.touch();
     }
 
@@ -147,7 +155,8 @@ public final class SpawnTracker {
     public static void record(ServerPlayer player, ResourceLocation dim, BlockPos pos, float angle, boolean forced) {
         PlayerRingData data = PlayerRingData.get(player.server);
         PlayerRingData.Entry entry = data.entry(player.getUUID());
-        entry.spawns.put(dim, new SpawnRecord(pos.immutable(), angle, forced, player.server.overworld().getGameTime()));
+        entry.spawns.put(dim, new SpawnRecord(pos.immutable(), angle, forced, player.server.overworld().getGameTime(),
+                forced ? null : blockAt(player.server, dim, pos)));
         data.touch();
     }
 
@@ -167,10 +176,30 @@ public final class SpawnTracker {
         }
         ResourceLocation dim = player.getRespawnDimension().location();
         SpawnRecord existing = entry.spawns.get(dim);
+        boolean forced = player.isRespawnForced();
         if (existing == null || !existing.pos().equals(pos)) {
-            entry.spawns.put(dim, new SpawnRecord(pos.immutable(), player.getRespawnAngle(), player.isRespawnForced(), existing == null ? 0L : player.server.overworld().getGameTime()));
+            entry.spawns.put(dim, new SpawnRecord(pos.immutable(), player.getRespawnAngle(), forced,
+                    existing == null ? 0L : player.server.overworld().getGameTime(), forced ? null : blockAt(player.server, dim, pos)));
             data.touch();
+        } else if (existing.block() == null && !existing.forced()) {
+            // Record from before 1.0.3: fill in which block the spawn is on, now that it's needed
+            ResourceLocation block = blockAt(player.server, dim, pos);
+            if (block != null) {
+                entry.spawns.put(dim, new SpawnRecord(existing.pos(), existing.angle(), existing.forced(), existing.time(), block));
+                data.touch();
+            }
         }
+    }
+
+    /** Registry id of the block at {@code pos}, or null if the dimension is missing or the spot is air. */
+    @Nullable
+    static ResourceLocation blockAt(MinecraftServer server, ResourceLocation dim, BlockPos pos) {
+        ServerLevel level = server.getLevel(ResourceKey.create(Registries.DIMENSION, dim));
+        if (level == null) {
+            return null;
+        }
+        BlockState state = level.getBlockState(pos);
+        return state.isAir() ? null : BuiltInRegistries.BLOCK.getKey(state.getBlock());
     }
 
     public static SpawnRecord get(ServerPlayer player, ResourceLocation dim) {
