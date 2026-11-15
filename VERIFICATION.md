@@ -1,8 +1,8 @@
 # Verification results
 
 Run on 2026-11-10, Windows 11, JDK 17 (Temurin 17.0.16), Gradle 8.8, ForgeGradle 6, Forge 47.4.0, Curios 5.14.1+1.20.1.
-Deliverable: `dist/travelersring-1.0.1.jar`, SHA-256 `bc22a353ad293c3433a3edabe6b0da982c21ed743712d8b50f7cf7e98ad08311`
-(141,590 bytes, version 1.0.1, built 2026-11-13 after `clean build`, 41 / 41 GameTests passed; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
+Deliverable: `dist/travelersring-1.0.2.jar`, SHA-256 `7fa352f19de6bb1aee8cbb94e01f8f25c8797f6a9ec9bfa9a505b52964703b29`
+(146,759 bytes, version 1.0.2, built 2026-11-15 after `clean build`, 42 / 42 GameTests passed; reobfuscated; contains no test classes; `META-INF/mods.toml` declares Forge ≥47.4.0, Minecraft 1.20.1, Curios ≥5.14.1).
 
 ## What was actually run and what happened
 
@@ -18,6 +18,7 @@ Deliverable: `dist/travelersring-1.0.1.jar`, SHA-256 `bc22a353ad293c3433a3edabe6
 | 8 | Dev client (now with JEI in its runtime classpath) joined that server | Joined. JEI started (`Starting JEI took 652.9 ms`, `Registering recipes ... 284 ms`) with no JEI or `travelersring` warnings/errors in the client log. I did **not** open JEI's screen to look at the ring recipes (no working GUI input, see below). |
 | 9 | Template and ring textures redrawn (rings: banded, gem-set style), rebuilt: `clean build runGameTestServer` | Build OK, 40 / 40 passed. The server was not re-booted for this texture-only change. The new sprites were only compared visually as a PNG against the vanilla one, not in-game. |
 | 10 | Client feedback 2026-11-13 (4 XP per block, level-drop line on the ring screen, Nether Star template in End City chests + end-stone duplication, Nether Star as the smithing addition): `build runGameTestServer` | Build OK, **41 / 41 passed** (new: End City template rate 392/2000 vs ~400 expected, none in a dungeon chest; duplication recipe; ingot no longer accepted). Real dedicated server booted with the new JAR (SHA below) and an **old-style config containing `cost_mode = "FLAT"`**: Forge corrected it to `cost_type = "PER_BLOCK"`, `xp_per_block = 4.0`, added `[template_loot]`, `Done (2.8s)`, clean stop. The new level-drop line on the ring screen was **not seen in-game**, only compiled. |
+| 11 | Client report 2026-11-15 ("the nether isn't working ... using bed instead of the respawn anchor"): the last *charged* anchor now counts as the Netherite/Nether Star ring's Nether destination; an empty Nether entry is labelled "Respawn Anchor" with an anchor-specific reason and "Unavailable" instead of "Free"; compact-layout tooltips show the level drop. `clean build runGameTestServer` | Build OK, **42 / 42 passed** (new: charging an anchor with glowstone through `ServerPlayerGameMode.useItemOn`, which fires Forge's `RightClickBlock`, then teleporting there without using a charge; a dry-anchor click records nothing; a later real anchor spawn wins; Nether Star ring lists it). Real dedicated server booted with the 1.0.2 JAR on the existing test world: `Done (2.444s)`, no errors, clean stop. The new screen wording was **not seen in-game**, only compiled. |
 
 ## GameTest coverage (40)
 

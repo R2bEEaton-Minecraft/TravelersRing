@@ -36,10 +36,15 @@ public class RingScreen extends Screen {
     private final MenuData data;
     /** XP bars to draw (the cost under each teleport button, plus the level drop it causes), filled in by init(). */
     private final List<Bar> bars = new ArrayList<>();
+    /** Why a destination is unavailable, drawn under its button (where the cost bar would be). */
+    private final List<Note> notes = new ArrayList<>();
     private int startY;
     private int headerH;
 
     private record Bar(int x, int y, int points, boolean affordable, Component levels) {
+    }
+
+    private record Note(int y, Component text) {
     }
 
     public RingScreen(MenuData data) {
@@ -50,6 +55,7 @@ public class RingScreen extends Screen {
     @Override
     protected void init() {
         bars.clear();
+        notes.clear();
         boolean hasSaved = data.saved() != null || data.savedUnreadable();
         List<MenuData.TargetView> targets = data.usableHere() && !hasSaved ? data.targets() : List.of();
         int otherRows = (data.usableHere() && hasSaved ? 1 : 0) + (hasSaved ? 1 : 0);
@@ -58,9 +64,11 @@ public class RingScreen extends Screen {
         List<Component> labels = new ArrayList<>();
         int w = 220;
         for (MenuData.TargetView t : targets) {
-            Component label = Component.translatable("screen.travelersring.teleport_to", describe(t),
-                    data.costsWaived() || t.cost() == 0 ? Component.translatable("screen.travelersring.free")
-                            : Component.translatable("screen.travelersring.xp", t.cost()));
+            // An unavailable destination has no cost; saying "Free" there reads as if it should work.
+            Component price = !t.valid() ? Component.translatable("screen.travelersring.unavailable")
+                    : data.costsWaived() || t.cost() == 0 ? Component.translatable("screen.travelersring.free")
+                    : Component.translatable("screen.travelersring.xp", t.cost());
+            Component label = Component.translatable("screen.travelersring.teleport_to", describe(t), price);
             labels.add(label);
             w = Math.max(w, this.font.width(label) + 24);
         }
@@ -90,11 +98,18 @@ public class RingScreen extends Screen {
             } else if (!affordable) {
                 b.setTooltip(Tooltip.create(Component.translatable("screen.travelersring.need_xp", t.cost(), data.playerXp())));
             } else if (t.fallback()) {
-                b.setTooltip(Tooltip.create(Component.translatable("screen.travelersring.fallback_world_spawn")));
+                Component why = Component.translatable("screen.travelersring.fallback_world_spawn");
+                b.setTooltip(Tooltip.create(barsOn || t.cost() == 0 ? why
+                        : Component.empty().append(levelChange(t.cost(), true)).append("\n").append(why)));
+            } else if (!barsOn && t.cost() > 0 && !data.costsWaived()) {
+                // Compact layout (too many destinations for the bars): the level drop moves into the tooltip
+                b.setTooltip(Tooltip.create(levelChange(t.cost(), true)));
             }
             addRenderableWidget(b);
             if (barsOn && t.valid() && t.cost() > 0) {
                 bars.add(new Bar(this.width / 2 - BAR_W / 2, y + 30, t.cost(), affordable, levelChange(t.cost(), affordable)));
+            } else if (barsOn && !t.valid()) {
+                notes.add(new Note(y + 26, RingText.failure(t.reason())));
             }
             y += barsOn ? ROW_WITH_BAR : ROW_PLAIN;
         }
@@ -184,6 +199,9 @@ public class RingScreen extends Screen {
             g.drawCenteredString(this.font, Component.translatable("screen.travelersring.not_here"), cx, statusY, 0xFF8080);
         } else {
             g.drawCenteredString(this.font, Component.translatable("screen.travelersring.no_saved"), cx, statusY, 0xB0B0B0);
+        }
+        for (Note note : notes) {
+            g.drawCenteredString(this.font, note.text(), cx, note.y(), 0xFF8080);
         }
         for (Bar bar : bars) {
             drawXpBar(g, bar.x(), bar.y(), bar.points(), bar.affordable() ? 0x80FF20 : 0xFF5555);

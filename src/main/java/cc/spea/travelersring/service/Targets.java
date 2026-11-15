@@ -8,6 +8,7 @@ import cc.spea.travelersring.service.Destination.Resolution;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +59,7 @@ public final class Targets {
             }
             case NETHER_STAR -> {
                 boolean sawOverworld = false;
-                for (Map.Entry<ResourceLocation, SpawnRecord> e : SpawnTracker.all(player)) {
+                for (Map.Entry<ResourceLocation, SpawnRecord> e : SpawnTracker.allForRing(player)) {
                     if (e.getKey().equals(ow)) {
                         out.add(overworldTarget(player));
                         sawOverworld = true;
@@ -79,11 +80,15 @@ public final class Targets {
     }
 
     private static Target recordedTarget(ServerPlayer player, ResourceLocation dim, boolean requireCharge) {
-        SpawnRecord rec = SpawnTracker.get(player, dim);
-        if (rec == null) {
-            return new Target(keyFor(dim), dim, null, Resolution.fail(Failure.NO_SPAWN, Kind.BED), false, null);
-        }
+        SpawnRecord rec = SpawnTracker.getForRing(player, dim);
         ResourceKey<Level> key = ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, dim);
+        if (rec == null) {
+            // In the Nether (or any anchor dimension) the missing destination is an anchor, not a bed: say so.
+            ServerLevel level = player.server.getLevel(key);
+            boolean anchors = level != null && level.dimensionType().respawnAnchorWorks();
+            return new Target(keyFor(dim), dim, null, anchors ? Resolution.fail(Failure.NO_ANCHOR, Kind.ANCHOR)
+                    : Resolution.fail(Failure.NO_SPAWN, Kind.BED), false, null);
+        }
         Resolution r = SpawnResolver.resolveRecorded(player.server, key, rec, requireCharge);
         return new Target(keyFor(dim), dim, rec.pos(), r, false, null);
     }

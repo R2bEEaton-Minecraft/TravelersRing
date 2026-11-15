@@ -9,6 +9,7 @@ import cc.spea.travelersring.service.RingService;
 import cc.spea.travelersring.service.RingService.Action;
 import cc.spea.travelersring.service.RingService.Status;
 import cc.spea.travelersring.service.SpawnTracker;
+import cc.spea.travelersring.service.Destination;
 import cc.spea.travelersring.service.Targets;
 import cc.spea.travelersring.service.XpHelper;
 import net.minecraft.core.BlockPos;
@@ -20,6 +21,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RespawnAnchorBlock;
@@ -213,6 +216,80 @@ public class SpawnTrackingTests {
                 RingService.perform(p, RingSource.CURIOS, Action.DELETE, "");
                 eq(Status.SUCCESS, RingService.perform(p, RingSource.CURIOS, Action.TELEPORT_SPAWN, "spawn:minecraft:overworld").status(), "End -> Overworld bed");
                 check(p.level() == level, "back in the Overworld");
+            } finally {
+                TestSupport.cleanup(server, id);
+            }
+        });
+    }
+
+    /**
+     * Client report (2026-11-15): "the Nether isn't working ... it's using bed instead of the respawn anchor".
+     * Charging an anchor with glowstone never sets the spawn, so nothing was recorded and the Nether entry showed as an
+     * unavailable "Bed". Now the last CHARGED anchor counts (PDF: "last interacted Respawn Anchor, as long as it's charged").
+     */
+    @GameTest(template = "empty", timeoutTicks = 200)
+    public static void charging_an_anchor_makes_it_the_netherite_rings_nether_destination(GameTestHelper helper) {
+        run(helper, () -> {
+            ServerLevel level = helper.getLevel();
+            MinecraftServer server = level.getServer();
+            ServerLevel nether = TestSupport.nether(server);
+            BlockPos nStart = new BlockPos(1200, 90, -1200);
+            TestSupport.platform(nether, nStart, 5, Blocks.NETHERRACK, 6);
+            BlockPos anchor = nStart.offset(3, 0, 3);
+            nether.setBlock(anchor, Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3); // charge 0
+            UUID id = UUID.randomUUID();
+            ServerPlayer p = TestSupport.mockPlayer(level, id);
+            try {
+                p.teleportTo(nether, nStart.getX() + 0.5, nStart.getY(), nStart.getZ() + 0.5, 0f, 0f);
+                TestSupport.equip(p, TestSupport.ring(1));
+                TestSupport.setXp(p, 5000);
+
+                // Before: no anchor known. The entry must say "Respawn Anchor" with an anchor-specific reason, not "Bed".
+                Targets.Target before = Targets.compute(p, RingTier.NETHERITE).get(0);
+                eq(Targets.keyFor(NETHER), before.key(), "Nether entry listed first");
+                check(!before.valid(), "nothing to go to yet");
+                eq(Destination.Kind.ANCHOR, before.resolution().kind(), "shown as a respawn anchor, not a bed");
+                eq("no_anchor", before.resolution().failure().key, "reason");
+
+                // Charge it with glowstone through the real interaction path (fires Forge's RightClickBlock)
+                p.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.GLOWSTONE, 4));
+                var hit = new BlockHitResult(Vec3.atCenterOf(anchor), Direction.UP, anchor, false);
+                p.gameMode.useItemOn(p, nether, p.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
+                eq(1, nether.getBlockState(anchor).getValue(RespawnAnchorBlock.CHARGE), "anchor charged");
+                check(p.getRespawnPosition() == null || !p.getRespawnPosition().equals(anchor), "charging does not set the spawn (vanilla)");
+                SpawnTracker.flushAnchorChecks(server); // what the end-of-tick handler does
+
+                Targets.Target after = Targets.compute(p, RingTier.NETHERITE).get(0);
+                check(after.valid(), "charged anchor now offered: " + (after.valid() ? "" : after.resolution().failure().key));
+                eq(Status.SUCCESS, RingService.perform(p, RingSource.CURIOS, Action.TELEPORT_SPAWN, Targets.keyFor(NETHER)).status(), "teleport to the charged anchor");
+                check(p.position().distanceTo(Vec3.atBottomCenterOf(anchor)) < 3, "next to the anchor, at " + p.position());
+                eq(1, nether.getBlockState(anchor).getValue(RespawnAnchorBlock.CHARGE), "ring teleport does not use the charge");
+                check(SpawnTracker.get(p, NETHER) == null, "charging is ring-only; not a death-respawn spawnpoint");
+
+                // The Nether Star ring sees it too, from any dimension
+                p.teleportTo(level, 0.5, level.getSharedSpawnPos().getY(), 0.5, 0f, 0f);
+                check(Targets.compute(p, RingTier.NETHER_STAR).stream().anyMatch(t -> t.key().equals(Targets.keyFor(NETHER)) && t.valid()),
+                        "Nether Star ring lists the charged anchor");
+
+                // A click that adds no charge (empty hand on a dry anchor) records nothing new
+                RingService.perform(p, RingSource.CURIOS, Action.DELETE, "");
+                BlockPos dry = nStart.offset(-3, 0, 3);
+                nether.setBlock(dry, Blocks.RESPAWN_ANCHOR.defaultBlockState(), 3);
+                p.teleportTo(nether, nStart.getX() + 0.5, nStart.getY(), nStart.getZ() + 0.5, 0f, 0f);
+                p.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+                var dryHit = new BlockHitResult(Vec3.atCenterOf(dry), Direction.UP, dry, false);
+                p.gameMode.useItemOn(p, nether, ItemStack.EMPTY, InteractionHand.MAIN_HAND, dryHit);
+                SpawnTracker.flushAnchorChecks(server);
+                eq(anchor, SpawnTracker.getForRing(p, NETHER).pos(), "still the anchor that was charged");
+
+                // Setting the spawn at a different charged anchor later wins (newest of the two)
+                BlockPos later = nStart.offset(3, 0, -3);
+                nether.setBlock(later, Blocks.RESPAWN_ANCHOR.defaultBlockState().setValue(RespawnAnchorBlock.CHARGE, 4), 3);
+                var laterHit = new BlockHitResult(Vec3.atCenterOf(later), Direction.UP, later, false);
+                p.gameMode.useItemOn(p, nether, ItemStack.EMPTY, InteractionHand.MAIN_HAND, laterHit);
+                SpawnTracker.flushAnchorChecks(server);
+                check(later.equals(p.getRespawnPosition()), "vanilla set the spawn at the later anchor");
+                eq(later, SpawnTracker.getForRing(p, NETHER).pos(), "ring follows the newer spawnpoint (ties go to the real spawn)");
             } finally {
                 TestSupport.cleanup(server, id);
             }

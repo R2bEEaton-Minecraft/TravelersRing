@@ -2,14 +2,14 @@
 
 Prerequisites: JDK 17 available to Gradle (the toolchain finds it), internet on first run (Forge/Curios download).
 
-## 1. Automated in-world tests (41 GameTests)
+## 1. Automated in-world tests (42 GameTests)
 
 ```
 ./gradlew runGameTestServer
 ```
 Starts a headless Forge server with Curios and this mod, builds mock players that go through the real
 `PlayerList.placeNewPlayer` / `respawn` code paths, and runs the suite. Success ends with
-`All 41 required tests passed :)`; failures are listed by name with the assertion message. (~25 s.)
+`All 42 required tests passed :)`; failures are listed by name with the assertion message. (~25 s.)
 Tests live in `src/gametest/` and are **not** shipped in the JAR.
 
 What they cover: ring NBT persistence (including a real logout/login), smithing upgrades preserving data, cost modes,
@@ -25,7 +25,7 @@ The teleport tests pin `FLAT` 10 in memory so their exact XP checks stay readabl
 ```
 ./gradlew build
 ```
-Then install a Forge 1.20.1-47.4.0 server, put `build/libs/travelersring-1.0.1.jar` and Curios `5.14.1+1.20.1`
+Then install a Forge 1.20.1-47.4.0 server, put `build/libs/travelersring-1.0.2.jar` and Curios `5.14.1+1.20.1`
 in `mods/`, accept the EULA, start it. Expect: `Loaded 10 curio slots`, `Loaded 1 curio entities`,
 `[mod:travelersring]` in `datapack list`, `Done`, no errors, `config/travelersring-common.toml` created, clean `stop`.
 
@@ -52,7 +52,7 @@ Dev client: `./gradlew runClient` (or `-PquickPlay=host:port` to join a server).
 
 * **Dev client:** `./gradlew runClient` already has Curios and JEI 15.56.0.205 on its classpath (`jei_version` in `gradle.properties`; dev-only, not a dependency of the shipped mod). World saves live in `run/saves`.
 * **Local server:** `server-test/` is a Forge 1.20.1-47.4.0 server whose `mods/` has Curios 5.14.1, JEI 15.56.0.205 and the mod JAR. Start it with `server-test/run.bat` (add `--nogui` if you like), then join `localhost` from a client that has the same three mods, or from the dev client with `./gradlew runClient -PquickPlay=localhost:25565`.
-* After rebuilding, copy `build/libs/travelersring-1.0.1.jar` over the one in `server-test/mods/`.
+* After rebuilding, copy `build/libs/travelersring-1.0.2.jar` over the one in `server-test/mods/`.
 
 ## 5. Regenerating assets
 `python -I tools/make_placeholder_textures.py` (placeholder PNGs), `python -I tools/make_empty_structure.py` (GameTest template).

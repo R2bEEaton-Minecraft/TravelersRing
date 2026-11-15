@@ -30,6 +30,7 @@
   "screen.travelersring.teleport_to": "Teleport to %s (%s)",
   "screen.travelersring.target": "%s: %s",
   "screen.travelersring.free": "Free",
+  "screen.travelersring.unavailable": "Unavailable",
   "screen.travelersring.xp": "%s XP",
   "screen.travelersring.need_xp": "You need %s XP. You have %s.",
   "screen.travelersring.levels_change": "Level %s → %s (-%s)",
@@ -68,6 +69,7 @@
 
   "failure.travelersring.dimension_missing": "that dimension doesn't exist",
   "failure.travelersring.no_spawn": "no spawn point set there",
+  "failure.travelersring.no_anchor": "no respawn anchor yet: charge one with glowstone",
   "failure.travelersring.spawn_block_missing": "the bed is gone",
   "failure.travelersring.bed_unusable": "beds don't work there",
   "failure.travelersring.bed_obstructed": "the bed is blocked",

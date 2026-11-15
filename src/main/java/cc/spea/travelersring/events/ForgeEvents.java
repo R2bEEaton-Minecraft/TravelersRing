@@ -6,9 +6,11 @@ import cc.spea.travelersring.service.RespawnChoice;
 import cc.spea.travelersring.service.RingService;
 import cc.spea.travelersring.service.SpawnTracker;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -27,6 +29,19 @@ public final class ForgeEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onSpawnSet(PlayerSetSpawnEvent event) {
         SpawnTracker.onSpawnSet(event);
+    }
+
+    /** LOWEST so a click another mod cancels is ignored; whether it charged the anchor is checked at tick end. */
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        SpawnTracker.onRightClickBlock(event);
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            SpawnTracker.flushAnchorChecks(event.getServer());
+        }
     }
 
     /** HIGHEST so we look at the player (and their equipped ring) before anything else reacts to the death. */

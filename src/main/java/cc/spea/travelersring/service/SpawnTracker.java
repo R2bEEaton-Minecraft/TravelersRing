@@ -4,13 +4,22 @@ import cc.spea.travelersring.data.PlayerRingData;
 import cc.spea.travelersring.data.PlayerRingData.SpawnRecord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.RespawnAnchorBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Tracks the LATEST successfully-set spawnpoint per dimension for each player.
@@ -25,6 +34,12 @@ import java.util.Map;
  */
 public final class SpawnTracker {
     private static boolean suppress;
+
+    /** Anchor right-clicks waiting for the end of the tick, when we can see whether they added charge. */
+    private record PendingAnchor(UUID player, ResourceKey<Level> dim, BlockPos pos, int chargeBefore) {
+    }
+
+    private static final List<PendingAnchor> PENDING_ANCHORS = new ArrayList<>();
 
     private SpawnTracker() {
     }
@@ -54,6 +69,79 @@ public final class SpawnTracker {
             return; // a respawn choice is in flight; vanilla's own re-set during respawn must not reorder records
         }
         record(player, event.getSpawnLevel().location(), pos, player.getYRot(), event.isForced());
+    }
+
+    /**
+     * The client's PDF asks for the "last interacted Respawn Anchor (as long as it's charged)". Charging an anchor with
+     * glowstone is an interaction but does NOT set the player's spawn, so vanilla never tells us about it. Forge has no
+     * "after use" event, so the click is noted here and checked once the tick ends ({@link #flushAnchorChecks}).
+     */
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.isCanceled() || !(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+        Level level = event.getLevel();
+        BlockState state = level.getBlockState(event.getPos());
+        if (state.getBlock() instanceof RespawnAnchorBlock && RespawnAnchorBlock.canSetSpawn(level)) {
+            PENDING_ANCHORS.add(new PendingAnchor(player.getUUID(), level.dimension(), event.getPos().immutable(),
+                    state.getValue(RespawnAnchorBlock.CHARGE)));
+        }
+    }
+
+    /** Records every anchor clicked this tick that now holds more charge than before the click. */
+    public static void flushAnchorChecks(MinecraftServer server) {
+        if (PENDING_ANCHORS.isEmpty()) {
+            return;
+        }
+        List<PendingAnchor> pending = new ArrayList<>(PENDING_ANCHORS);
+        PENDING_ANCHORS.clear();
+        for (PendingAnchor a : pending) {
+            ServerPlayer player = server.getPlayerList().getPlayer(a.player());
+            ServerLevel level = server.getLevel(a.dim());
+            if (player == null || level == null) {
+                continue;
+            }
+            BlockState state = level.getBlockState(a.pos());
+            if (state.getBlock() instanceof RespawnAnchorBlock && state.getValue(RespawnAnchorBlock.CHARGE) > a.chargeBefore()) {
+                recordAnchor(player, a.dim().location(), a.pos());
+            }
+        }
+    }
+
+    public static void recordAnchor(ServerPlayer player, ResourceLocation dim, BlockPos pos) {
+        PlayerRingData data = PlayerRingData.get(player.server);
+        data.entry(player.getUUID()).anchors.put(dim, new SpawnRecord(pos.immutable(), 0f, false, player.server.overworld().getGameTime()));
+        data.touch();
+    }
+
+    /**
+     * Where a ring teleport goes for {@code dim}: the newer of the latest spawnpoint and the latest charged anchor.
+     * (Only the ring uses this. Death respawn choices stay limited to real spawnpoints.)
+     */
+    public static SpawnRecord getForRing(ServerPlayer player, ResourceLocation dim) {
+        SpawnRecord spawn = get(player, dim);
+        PlayerRingData.Entry entry = PlayerRingData.get(player.server).peek(player.getUUID());
+        SpawnRecord anchor = entry == null ? null : entry.anchors.get(dim);
+        if (anchor == null) {
+            return spawn;
+        }
+        return spawn == null || anchor.time() > spawn.time() ? anchor : spawn;
+    }
+
+    /** Every dimension the ring knows a destination for (spawnpoints and charged anchors), newest first. */
+    public static List<Map.Entry<ResourceLocation, SpawnRecord>> allForRing(ServerPlayer player) {
+        syncWithVanilla(player);
+        PlayerRingData.Entry entry = PlayerRingData.get(player.server).peek(player.getUUID());
+        Map<ResourceLocation, SpawnRecord> merged = new LinkedHashMap<>();
+        if (entry != null) {
+            merged.putAll(entry.spawns);
+            for (Map.Entry<ResourceLocation, SpawnRecord> a : entry.anchors.entrySet()) {
+                merged.merge(a.getKey(), a.getValue(), (s, an) -> an.time() > s.time() ? an : s);
+            }
+        }
+        List<Map.Entry<ResourceLocation, SpawnRecord>> out = new ArrayList<>(merged.entrySet());
+        out.sort(Comparator.comparingLong((Map.Entry<ResourceLocation, SpawnRecord> e) -> e.getValue().time()).reversed());
+        return out;
     }
 
     public static void record(ServerPlayer player, ResourceLocation dim, BlockPos pos, float angle, boolean forced) {

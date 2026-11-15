@@ -23,6 +23,8 @@ import java.util.UUID;
  *
  * <ul>
  *   <li><b>spawns</b>: the latest successfully-set spawnpoint PER dimension (vanilla only remembers one).</li>
+ *   <li><b>anchors</b>: the latest respawn anchor the player CHARGED per dimension. Ring teleports only (the PDF's
+ *       "last interacted Respawn Anchor"); never offered as a death respawn and never changes the real spawn.</li>
  *   <li><b>retained</b>: held/armor items pulled out of a death drop list for a Nether Star ring wearer,
  *       persisted so a crash/disconnect between death and respawn cannot lose them.</li>
  *   <li><b>swap</b>: the player's real spawnpoint while a death-screen respawn choice temporarily overrides it,
@@ -64,12 +66,13 @@ public final class PlayerRingData extends SavedData {
 
     public static final class Entry {
         public final Map<ResourceLocation, SpawnRecord> spawns = new LinkedHashMap<>();
+        public final Map<ResourceLocation, SpawnRecord> anchors = new LinkedHashMap<>();
         public final List<RetainedStack> retained = new ArrayList<>();
         @Nullable
         public SwapRecord swap;
 
         boolean isEmpty() {
-            return spawns.isEmpty() && retained.isEmpty() && swap == null;
+            return spawns.isEmpty() && anchors.isEmpty() && retained.isEmpty() && swap == null;
         }
     }
 
@@ -108,17 +111,10 @@ public final class PlayerRingData extends SavedData {
             CompoundTag p = new CompoundTag();
             p.put("Id", NbtUtils.createUUID(e.getKey()));
 
-            ListTag spawns = new ListTag();
-            for (Map.Entry<ResourceLocation, SpawnRecord> s : en.spawns.entrySet()) {
-                CompoundTag t = new CompoundTag();
-                t.putString("Dim", s.getKey().toString());
-                t.put("Pos", NbtUtils.writeBlockPos(s.getValue().pos()));
-                t.putFloat("Angle", s.getValue().angle());
-                t.putBoolean("Forced", s.getValue().forced());
-                t.putLong("Time", s.getValue().time());
-                spawns.add(t);
+            p.put("Spawns", saveSpawns(en.spawns));
+            if (!en.anchors.isEmpty()) {
+                p.put("Anchors", saveSpawns(en.anchors));
             }
-            p.put("Spawns", spawns);
 
             ListTag retained = new ListTag();
             for (RetainedStack r : en.retained) {
@@ -157,16 +153,8 @@ public final class PlayerRingData extends SavedData {
             UUID id = NbtUtils.loadUUID(p.get("Id"));
             Entry en = new Entry();
 
-            ListTag spawns = p.getList("Spawns", Tag.TAG_COMPOUND);
-            for (int j = 0; j < spawns.size(); j++) {
-                CompoundTag t = spawns.getCompound(j);
-                ResourceLocation dim = ResourceLocation.tryParse(t.getString("Dim"));
-                if (dim == null || !t.contains("Pos")) {
-                    continue;
-                }
-                en.spawns.put(dim, new SpawnRecord(NbtUtils.readBlockPos(t.getCompound("Pos")), t.getFloat("Angle"),
-                        t.getBoolean("Forced"), t.getLong("Time")));
-            }
+            loadSpawns(p.getList("Spawns", Tag.TAG_COMPOUND), en.spawns);
+            loadSpawns(p.getList("Anchors", Tag.TAG_COMPOUND), en.anchors);
 
             ListTag retained = p.getList("Retained", Tag.TAG_COMPOUND);
             for (int j = 0; j < retained.size(); j++) {
@@ -189,5 +177,31 @@ public final class PlayerRingData extends SavedData {
             data.players.put(id, en);
         }
         return data;
+    }
+
+    private static ListTag saveSpawns(Map<ResourceLocation, SpawnRecord> map) {
+        ListTag list = new ListTag();
+        for (Map.Entry<ResourceLocation, SpawnRecord> s : map.entrySet()) {
+            CompoundTag t = new CompoundTag();
+            t.putString("Dim", s.getKey().toString());
+            t.put("Pos", NbtUtils.writeBlockPos(s.getValue().pos()));
+            t.putFloat("Angle", s.getValue().angle());
+            t.putBoolean("Forced", s.getValue().forced());
+            t.putLong("Time", s.getValue().time());
+            list.add(t);
+        }
+        return list;
+    }
+
+    private static void loadSpawns(ListTag list, Map<ResourceLocation, SpawnRecord> into) {
+        for (int j = 0; j < list.size(); j++) {
+            CompoundTag t = list.getCompound(j);
+            ResourceLocation dim = ResourceLocation.tryParse(t.getString("Dim"));
+            if (dim == null || !t.contains("Pos")) {
+                continue;
+            }
+            into.put(dim, new SpawnRecord(NbtUtils.readBlockPos(t.getCompound("Pos")), t.getFloat("Angle"),
+                    t.getBoolean("Forced"), t.getLong("Time")));
+        }
     }
 }

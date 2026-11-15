@@ -17,7 +17,7 @@ Two smithing upgrades add the Nether, then every dimension, keeping your gear wh
 | Curios | **Required.** Built and tested against `5.14.1+1.20.1` (declared minimum `5.14.1`) |
 | Java | 17 |
 
-Install the JAR (`dist/travelersring-1.0.1.jar`) **and Curios** in `mods/` on the server **and** every client.
+Install the JAR (`dist/travelersring-1.0.2.jar`) **and Curios** in `mods/` on the server **and** every client.
 The mod is required on both sides (it has a network protocol and a client UI).
 
 The mod itself adds the `ring` Curios slot to players (`data/travelersring/curios/entities/player.json`).
@@ -48,7 +48,10 @@ The menu shows what the server says is currently possible:
 
 * No saved location → one **"Teleport to ..."** button per destination with its XP cost (greyed out with the reason if not available).
   Under each button is an XP bar filled to that cost, with the level number centred above it, like the HUD, so you can see what 10 points actually looks like.
-  The cost number turns red if you can't afford it.
+  The cost number turns red if you can't afford it. With several destinations, each one has its own cost, bar and
+  level-drop line, each worked out from your current XP (they are alternatives, not added together). If there are too
+  many to fit on screen, the bars are dropped and the level drop moves into each button's tooltip.
+  An unavailable destination says "Unavailable" with the reason under it (e.g. no respawn anchor charged yet).
 * Saved location → **"Return to saved location (free)"** and **"Delete saved location"** (asks to confirm).
   A new teleport is not offered until the saved location is returned to or deleted.
 
@@ -68,10 +71,11 @@ A failed teleport never charges XP and never overwrites or clears a saved locati
 
 * **Base** – your Overworld spawnpoint (bed / `/spawnpoint`); falls back to the Overworld **world spawn** if that bed is
   missing, obstructed, etc.
-* **Netherite** – in the Overworld: as Base. In the Nether: your **latest recorded Nether spawn** (normally the
-  last Respawn Anchor you charged and activated; it must still be charged) **or** your Overworld spawn.
-* **Nether Star** – the **latest recorded spawnpoint for every dimension** (including modded dimensions) plus the
-  Overworld world-spawn fallback.
+* **Netherite** – in the Overworld: as Base. In the Nether: the **last Respawn Anchor you charged or set your spawn
+  at** (whichever was later; it must still be charged) **or** your Overworld spawn. Charging an anchor with glowstone is
+  enough; you don't have to set your spawn there. Until you have used one, the Nether entry is greyed out and says why.
+* **Nether Star** – the **latest recorded spawnpoint for every dimension** (including modded dimensions), the last
+  charged anchor per dimension (as above), plus the Overworld world-spawn fallback.
 
 Ring teleports **never consume Respawn Anchor charges** and never change your real spawnpoint.
 
@@ -80,7 +84,9 @@ Ring teleports **never consume Respawn Anchor charges** and never change your re
 Vanilla remembers one spawnpoint. The mod keeps a persistent record of the latest *successfully set* spawnpoint in
 **each dimension** per player (`world/data/travelersring_players.dat`). It listens to Forge's `PlayerSetSpawnEvent`, which
 vanilla fires only for real spawn-setting actions (sleeping in a bed – even by day –, activating a *charged* anchor,
-`/spawnpoint`). Clicking an uncharged anchor or a bed that fails is not recorded. Your *current* vanilla spawn is adopted
+`/spawnpoint`). Clicking an uncharged anchor or a bed that fails is not recorded. Separately, for **ring teleports only**, the last
+anchor you *charged* in each dimension is remembered too (checked at the end of the tick: the click must really have
+added charge). Charged-only anchors are not offered on the death screen, which lists real spawnpoints. Your *current* vanilla spawn is adopted
 on login. Spawnpoints from before the mod was installed cannot be recovered.
 
 ### Validation (all server-side)
@@ -185,7 +191,7 @@ long trips if needed.
 ## Building
 
 ```
-./gradlew build            # -> build/libs/travelersring-1.0.1.jar (reobfuscated, distributable)
+./gradlew build            # -> build/libs/travelersring-1.0.2.jar (reobfuscated, distributable)
 ```
 JDK 17 is used via Gradle's toolchain. The first build downloads Forge and Curios.
 The released JAR is also copied to `dist/`. See [TESTING.md](TESTING.md) to run the tests.

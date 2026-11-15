@@ -13,6 +13,7 @@ public record Destination(ServerLevel level, double x, double y, double z, float
     public enum Failure {
         DIMENSION_MISSING("dimension_missing"),
         NO_SPAWN("no_spawn"),
+        NO_ANCHOR("no_anchor"),
         SPAWN_BLOCK_MISSING("spawn_block_missing"),
         BED_UNUSABLE("bed_unusable"),
         BED_OBSTRUCTED("bed_obstructed"),
