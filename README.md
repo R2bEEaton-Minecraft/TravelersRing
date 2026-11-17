@@ -4,7 +4,7 @@ A Forge 1.20.1 mod (needs Curios), built for Applecar.
 The ring teleports you to your spawn for some XP and remembers where you were, so you can come back for free.
 Two smithing upgrades add the Nether, then every dimension, keeping your gear when you die, and choosing where you respawn.
 
-Idea and design by Applecar. Code by R2bEEaton. Ring and template textures by Applecar's texture artist.
+Idea and design by Applecar. Code by R2bEEaton. Ring and template textures by [PorotoMz](https://x.com/PorotoMz).
 
 Download: [Modrinth](https://modrinth.com/mod/travelers-ring)
 
@@ -208,7 +208,7 @@ The released JAR is also copied to `dist/`. See [TESTING.md](TESTING.md) to run 
 
 ## Art
 
-The ring and template textures are by Applecar's texture artist. Each ring has two icons:
+The ring and template textures are by [PorotoMz](https://x.com/PorotoMz). Each ring has two icons:
 
 * **off** (`travelers_ring*.png`): no saved location, the normal state.
 * **on** (`travelers_ring*_active.png`, glowing): you've teleported to spawn and the ring holds your free return.
