@@ -4,9 +4,11 @@ A Forge 1.20.1 mod (needs Curios), built for Applecar.
 The ring teleports you to your spawn for some XP and remembers where you were, so you can come back for free.
 Two smithing upgrades add the Nether, then every dimension, keeping your gear when you die, and choosing where you respawn.
 
-> **Status:** everything in `BRIEF.md` is built, with the client's textures (1.0.4). "Traveler's Ring"
-> is a working name the client hasn't confirmed. [ASSUMPTIONS.md](ASSUMPTIONS.md) lists the decisions made along the way and
-> [VERIFICATION.md](VERIFICATION.md) says exactly what was and wasn't tested.
+Idea and design by Applecar. Code by R2bEEaton. Ring and template textures by Applecar's texture artist.
+
+Download: [Modrinth](https://modrinth.com/mod/travelers-ring)
+
+> **Status:** 1.0.4. [VERIFICATION.md](VERIFICATION.md) says exactly what was and wasn't tested.
 
 ## Requirements
 
@@ -114,7 +116,7 @@ If a Nether Star ring is **equipped in a Curios slot when you die**:
 * **The ring itself and other Curios** are decided by **Curios' own drop rules/settings**, not by this mod. By default
   Curios drops them on death unless `keepInventory`/Curios config says otherwise. A config switch
   (`death.ring_keeps_itself`, default **off**) makes the Nether Star ring declare itself "always keep" through Curios'
-  own drop-rule API, matching the design doc's wording. Other mods' Curios overrides still win. See ASSUMPTIONS.md.
+  own drop-rule API, matching the design doc's wording. Other mods' Curios overrides still win.
 * **Respawn choice.** The death screen gets a **"Respawn at: ..."** button that cycles through *Default spawn*, every
   recorded spawnpoint, and *World spawn*. It is free. The server validates the choice and then lets vanilla's own respawn
   code re-validate it (so a bed/anchor destroyed on the death screen falls back to the world spawn, never strands you),
@@ -206,7 +208,7 @@ The released JAR is also copied to `dist/`. See [TESTING.md](TESTING.md) to run 
 
 ## Art
 
-The ring and template textures are the client's artist's (delivered 2026-11-17). Each ring has two icons:
+The ring and template textures are by Applecar's texture artist. Each ring has two icons:
 
 * **off** (`travelers_ring*.png`): no saved location, the normal state.
 * **on** (`travelers_ring*_active.png`, glowing): you've teleported to spawn and the ring holds your free return.
