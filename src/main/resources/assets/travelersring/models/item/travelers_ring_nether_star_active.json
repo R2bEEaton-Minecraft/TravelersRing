@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "travelersring:item/travelers_ring_nether_star_active"
+  }
+}

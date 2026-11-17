@@ -2,5 +2,8 @@
   "parent": "item/generated",
   "textures": {
     "layer0": "travelersring:item/travelers_ring_netherite"
-  }
+  },
+  "overrides": [
+    { "predicate": { "travelersring:active": 1 }, "model": "travelersring:item/travelers_ring_netherite_active" }
+  ]
 }

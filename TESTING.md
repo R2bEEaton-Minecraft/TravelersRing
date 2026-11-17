@@ -31,7 +31,7 @@ Vessel (`enigmaticlegacy:permanent_item_entity`), and those tests look for ordin
 ```
 ./gradlew build
 ```
-Then install a Forge 1.20.1-47.4.0 server, put `build/libs/travelersring-1.0.3.jar` and Curios `5.14.1+1.20.1`
+Then install a Forge 1.20.1-47.4.0 server, put `build/libs/travelersring-1.0.4.jar` and Curios `5.14.1+1.20.1`
 in `mods/`, accept the EULA, start it. Expect: `Loaded 10 curio slots`, `Loaded 1 curio entities`,
 `[mod:travelersring]` in `datapack list`, `Done`, no errors, `config/travelersring-common.toml` created, clean `stop`.
 
@@ -58,7 +58,7 @@ Dev client: `./gradlew runClient` (or `-PquickPlay=host:port` to join a server).
 
 * **Dev client:** `./gradlew runClient` already has Curios and JEI 15.56.0.205 on its classpath (`jei_version` in `gradle.properties`; dev-only, not a dependency of the shipped mod). World saves live in `run/saves`.
 * **Local server:** `server-test/` is a Forge 1.20.1-47.4.0 server whose `mods/` has Curios 5.14.1, JEI 15.56.0.205 and the mod JAR. Start it with `server-test/run.bat` (add `--nogui` if you like), then join `localhost` from a client that has the same three mods, or from the dev client with `./gradlew runClient -PquickPlay=localhost:25565`.
-* After rebuilding, copy `build/libs/travelersring-1.0.3.jar` over the one in `server-test/mods/`.
+* After rebuilding, copy `build/libs/travelersring-1.0.4.jar` over the one in `server-test/mods/`.
 
 ## 5. Regenerating assets
 `python -I tools/make_placeholder_textures.py` (placeholder PNGs), `python -I tools/make_empty_structure.py` (GameTest template).
